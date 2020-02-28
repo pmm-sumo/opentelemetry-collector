@@ -2,6 +2,8 @@ module github.com/open-telemetry/opentelemetry-collector
 
 go 1.13
 
+replace github.com/open-telemetry/opentelemetry-collector => ./
+
 require (
 	contrib.go.opencensus.io/exporter/jaeger v0.1.1-0.20190430175949-e8b55949d948
 	contrib.go.opencensus.io/exporter/ocagent v0.6.0
