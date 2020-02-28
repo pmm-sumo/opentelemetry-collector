@@ -35,10 +35,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 
-	"github.com/open-telemetry/opentelemetry-collector/consumer"
-	"github.com/open-telemetry/opentelemetry-collector/consumer/consumerdata"
-	"github.com/open-telemetry/opentelemetry-collector/internal"
-	"github.com/open-telemetry/opentelemetry-collector/observability"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer/consumerdata"
+	"github.com/pmm-sumo/opentelemetry-collector/internal"
+	"github.com/pmm-sumo/opentelemetry-collector/observability"
 )
 
 // TODO: add E2E tests once ocagent implements metric service client.

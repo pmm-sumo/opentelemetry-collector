@@ -20,9 +20,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector/config/configerror"
-	"github.com/open-telemetry/opentelemetry-collector/config/configmodels"
-	"github.com/open-telemetry/opentelemetry-collector/exporter"
+	"github.com/pmm-sumo/opentelemetry-collector/config/configerror"
+	"github.com/pmm-sumo/opentelemetry-collector/config/configmodels"
+	"github.com/pmm-sumo/opentelemetry-collector/exporter"
 )
 
 const (

@@ -21,8 +21,8 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector/config/configmodels"
-	"github.com/open-telemetry/opentelemetry-collector/consumer"
+	"github.com/pmm-sumo/opentelemetry-collector/config/configmodels"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer"
 )
 
 // BaseFactory defines the common functions for all receiver factories.

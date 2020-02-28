@@ -19,7 +19,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector/config/configmodels"
+	"github.com/pmm-sumo/opentelemetry-collector/config/configmodels"
 )
 
 // Factory is a factory interface for extensions to the service.

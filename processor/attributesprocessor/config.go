@@ -15,8 +15,8 @@
 package attributesprocessor
 
 import (
-	"github.com/open-telemetry/opentelemetry-collector/config/configmodels"
-	"github.com/open-telemetry/opentelemetry-collector/internal/processor/span"
+	"github.com/pmm-sumo/opentelemetry-collector/config/configmodels"
+	"github.com/pmm-sumo/opentelemetry-collector/internal/processor/span"
 )
 
 // Config specifies the set of attributes to be inserted, updated, upserted and

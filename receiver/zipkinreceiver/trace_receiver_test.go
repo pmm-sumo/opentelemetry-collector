@@ -33,17 +33,17 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector/component"
-	"github.com/open-telemetry/opentelemetry-collector/config/configmodels"
-	"github.com/open-telemetry/opentelemetry-collector/consumer"
-	"github.com/open-telemetry/opentelemetry-collector/consumer/consumerdata"
-	"github.com/open-telemetry/opentelemetry-collector/exporter/exportertest"
-	"github.com/open-telemetry/opentelemetry-collector/exporter/zipkinexporter"
-	"github.com/open-telemetry/opentelemetry-collector/internal"
-	"github.com/open-telemetry/opentelemetry-collector/oterr"
-	"github.com/open-telemetry/opentelemetry-collector/testutils"
-	tracetranslator "github.com/open-telemetry/opentelemetry-collector/translator/trace"
-	"github.com/open-telemetry/opentelemetry-collector/translator/trace/zipkin"
+	"github.com/pmm-sumo/opentelemetry-collector/component"
+	"github.com/pmm-sumo/opentelemetry-collector/config/configmodels"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer/consumerdata"
+	"github.com/pmm-sumo/opentelemetry-collector/exporter/exportertest"
+	"github.com/pmm-sumo/opentelemetry-collector/exporter/zipkinexporter"
+	"github.com/pmm-sumo/opentelemetry-collector/internal"
+	"github.com/pmm-sumo/opentelemetry-collector/oterr"
+	"github.com/pmm-sumo/opentelemetry-collector/testutils"
+	tracetranslator "github.com/pmm-sumo/opentelemetry-collector/translator/trace"
+	"github.com/pmm-sumo/opentelemetry-collector/translator/trace/zipkin"
 )
 
 func TestTraceIDConversion(t *testing.T) {

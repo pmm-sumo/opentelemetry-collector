@@ -19,7 +19,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector/processor/batchprocessor"
+	"github.com/pmm-sumo/opentelemetry-collector/processor/batchprocessor"
 )
 
 const (

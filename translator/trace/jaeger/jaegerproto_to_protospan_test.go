@@ -26,9 +26,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.opencensus.io/trace"
 
-	"github.com/open-telemetry/opentelemetry-collector/consumer/consumerdata"
-	"github.com/open-telemetry/opentelemetry-collector/internal"
-	tracetranslator "github.com/open-telemetry/opentelemetry-collector/translator/trace"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer/consumerdata"
+	"github.com/pmm-sumo/opentelemetry-collector/internal"
+	tracetranslator "github.com/pmm-sumo/opentelemetry-collector/translator/trace"
 )
 
 func TestOpenCensusToJaeger(t *testing.T) {

@@ -19,7 +19,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector/config/configmodels"
+	"github.com/pmm-sumo/opentelemetry-collector/config/configmodels"
 )
 
 // BaseFactory defines the common functions for all exporter factories.

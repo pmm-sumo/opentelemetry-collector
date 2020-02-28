@@ -28,11 +28,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector/config"
-	"github.com/open-telemetry/opentelemetry-collector/config/configmodels"
-	"github.com/open-telemetry/opentelemetry-collector/defaults"
-	"github.com/open-telemetry/opentelemetry-collector/extension"
-	"github.com/open-telemetry/opentelemetry-collector/testutils"
+	"github.com/pmm-sumo/opentelemetry-collector/config"
+	"github.com/pmm-sumo/opentelemetry-collector/config/configmodels"
+	"github.com/pmm-sumo/opentelemetry-collector/defaults"
+	"github.com/pmm-sumo/opentelemetry-collector/extension"
+	"github.com/pmm-sumo/opentelemetry-collector/testutils"
 )
 
 func TestApplication_Start(t *testing.T) {

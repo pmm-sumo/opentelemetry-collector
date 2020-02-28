@@ -22,7 +22,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/open-telemetry/opentelemetry-collector/consumer/consumerdata"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer/consumerdata"
 )
 
 func TestSinkTraceExporter(t *testing.T) {

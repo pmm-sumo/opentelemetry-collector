@@ -28,13 +28,13 @@ import (
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector/config/configmodels"
-	"github.com/open-telemetry/opentelemetry-collector/consumer/consumerdata"
-	"github.com/open-telemetry/opentelemetry-collector/consumer/consumererror"
-	"github.com/open-telemetry/opentelemetry-collector/exporter"
-	"github.com/open-telemetry/opentelemetry-collector/exporter/exporterhelper"
-	spandatatranslator "github.com/open-telemetry/opentelemetry-collector/translator/trace/spandata"
-	"github.com/open-telemetry/opentelemetry-collector/translator/trace/zipkin"
+	"github.com/pmm-sumo/opentelemetry-collector/config/configmodels"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer/consumerdata"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer/consumererror"
+	"github.com/pmm-sumo/opentelemetry-collector/exporter"
+	"github.com/pmm-sumo/opentelemetry-collector/exporter/exporterhelper"
+	spandatatranslator "github.com/pmm-sumo/opentelemetry-collector/translator/trace/spandata"
+	"github.com/pmm-sumo/opentelemetry-collector/translator/trace/zipkin"
 )
 
 // zipkinExporter is a multiplexing exporter that spawns a new OpenCensus-Go Zipkin

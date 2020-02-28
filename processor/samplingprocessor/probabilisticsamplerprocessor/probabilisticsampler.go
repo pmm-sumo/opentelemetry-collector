@@ -20,11 +20,11 @@ import (
 
 	tracepb "github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1"
 
-	"github.com/open-telemetry/opentelemetry-collector/component"
-	"github.com/open-telemetry/opentelemetry-collector/consumer"
-	"github.com/open-telemetry/opentelemetry-collector/consumer/consumerdata"
-	"github.com/open-telemetry/opentelemetry-collector/oterr"
-	"github.com/open-telemetry/opentelemetry-collector/processor"
+	"github.com/pmm-sumo/opentelemetry-collector/component"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer/consumerdata"
+	"github.com/pmm-sumo/opentelemetry-collector/oterr"
+	"github.com/pmm-sumo/opentelemetry-collector/processor"
 )
 
 // samplingPriority has the semantic result of parsing the "sampling.priority"

@@ -24,12 +24,12 @@ import (
 	"go.opencensus.io/stats/view"
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector/internal/collector/telemetry"
-	"github.com/open-telemetry/opentelemetry-collector/obsreport"
-	"github.com/open-telemetry/opentelemetry-collector/processor"
-	"github.com/open-telemetry/opentelemetry-collector/processor/batchprocessor"
-	"github.com/open-telemetry/opentelemetry-collector/processor/queuedprocessor"
-	"github.com/open-telemetry/opentelemetry-collector/processor/samplingprocessor/tailsamplingprocessor"
+	"github.com/pmm-sumo/opentelemetry-collector/internal/collector/telemetry"
+	"github.com/pmm-sumo/opentelemetry-collector/obsreport"
+	"github.com/pmm-sumo/opentelemetry-collector/processor"
+	"github.com/pmm-sumo/opentelemetry-collector/processor/batchprocessor"
+	"github.com/pmm-sumo/opentelemetry-collector/processor/queuedprocessor"
+	"github.com/pmm-sumo/opentelemetry-collector/processor/samplingprocessor/tailsamplingprocessor"
 )
 
 const (

@@ -38,13 +38,13 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	"github.com/open-telemetry/opentelemetry-collector/component"
-	"github.com/open-telemetry/opentelemetry-collector/consumer"
-	"github.com/open-telemetry/opentelemetry-collector/consumer/consumerdata"
-	"github.com/open-telemetry/opentelemetry-collector/exporter/exportertest"
-	"github.com/open-telemetry/opentelemetry-collector/internal"
-	"github.com/open-telemetry/opentelemetry-collector/observability/observabilitytest"
-	"github.com/open-telemetry/opentelemetry-collector/testutils"
+	"github.com/pmm-sumo/opentelemetry-collector/component"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer/consumerdata"
+	"github.com/pmm-sumo/opentelemetry-collector/exporter/exportertest"
+	"github.com/pmm-sumo/opentelemetry-collector/internal"
+	"github.com/pmm-sumo/opentelemetry-collector/observability/observabilitytest"
+	"github.com/pmm-sumo/opentelemetry-collector/testutils"
 )
 
 // TODO(ccaraman): Migrate tests to use assert for validating functionality.

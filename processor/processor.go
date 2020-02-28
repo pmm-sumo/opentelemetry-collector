@@ -16,8 +16,8 @@
 package processor
 
 import (
-	"github.com/open-telemetry/opentelemetry-collector/component"
-	"github.com/open-telemetry/opentelemetry-collector/consumer"
+	"github.com/pmm-sumo/opentelemetry-collector/component"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer"
 )
 
 // Processor defines the common functions that must be implemented by TraceProcessor

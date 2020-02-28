@@ -22,7 +22,7 @@ import (
 	"github.com/prometheus/prometheus/scrape"
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector/consumer/consumerdata"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer/consumerdata"
 )
 
 // test helpers

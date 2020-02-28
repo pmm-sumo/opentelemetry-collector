@@ -26,7 +26,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/open-telemetry/opentelemetry-collector/testbed/testbed"
+	"github.com/pmm-sumo/opentelemetry-collector/testbed/testbed"
 )
 
 // createConfigFile creates a collector config file that corresponds to the

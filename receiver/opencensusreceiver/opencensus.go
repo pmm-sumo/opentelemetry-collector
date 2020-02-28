@@ -29,13 +29,13 @@ import (
 	"github.com/soheilhy/cmux"
 	"google.golang.org/grpc"
 
-	"github.com/open-telemetry/opentelemetry-collector/component"
-	"github.com/open-telemetry/opentelemetry-collector/consumer"
-	"github.com/open-telemetry/opentelemetry-collector/observability"
-	"github.com/open-telemetry/opentelemetry-collector/oterr"
-	"github.com/open-telemetry/opentelemetry-collector/receiver"
-	"github.com/open-telemetry/opentelemetry-collector/receiver/opencensusreceiver/ocmetrics"
-	"github.com/open-telemetry/opentelemetry-collector/receiver/opencensusreceiver/octrace"
+	"github.com/pmm-sumo/opentelemetry-collector/component"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer"
+	"github.com/pmm-sumo/opentelemetry-collector/observability"
+	"github.com/pmm-sumo/opentelemetry-collector/oterr"
+	"github.com/pmm-sumo/opentelemetry-collector/receiver"
+	"github.com/pmm-sumo/opentelemetry-collector/receiver/opencensusreceiver/ocmetrics"
+	"github.com/pmm-sumo/opentelemetry-collector/receiver/opencensusreceiver/octrace"
 )
 
 // Receiver is the type that exposes Trace and Metrics reception.

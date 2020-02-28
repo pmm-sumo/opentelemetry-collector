@@ -15,8 +15,8 @@
 package jaegergrpcexporter
 
 import (
-	"github.com/open-telemetry/opentelemetry-collector/config/configgrpc"
-	"github.com/open-telemetry/opentelemetry-collector/config/configmodels"
+	"github.com/pmm-sumo/opentelemetry-collector/config/configgrpc"
+	"github.com/pmm-sumo/opentelemetry-collector/config/configmodels"
 )
 
 // Config defines configuration for Jaeger gRPC exporter.

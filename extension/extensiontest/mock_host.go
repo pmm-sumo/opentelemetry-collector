@@ -18,7 +18,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/open-telemetry/opentelemetry-collector/component"
+	"github.com/pmm-sumo/opentelemetry-collector/component"
 )
 
 // MockHost mocks an component.Host for test purposes.

@@ -27,10 +27,10 @@ import (
 	"go.opencensus.io/trace"
 	"google.golang.org/api/support/bundler"
 
-	"github.com/open-telemetry/opentelemetry-collector/consumer"
-	"github.com/open-telemetry/opentelemetry-collector/consumer/consumerdata"
-	"github.com/open-telemetry/opentelemetry-collector/observability"
-	"github.com/open-telemetry/opentelemetry-collector/oterr"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer/consumerdata"
+	"github.com/pmm-sumo/opentelemetry-collector/observability"
+	"github.com/pmm-sumo/opentelemetry-collector/oterr"
 )
 
 // Receiver is the type used to handle metrics from OpenCensus exporters.

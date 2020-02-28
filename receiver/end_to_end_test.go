@@ -23,10 +23,10 @@ import (
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector/config/configmodels"
-	"github.com/open-telemetry/opentelemetry-collector/exporter/loggingexporter"
-	"github.com/open-telemetry/opentelemetry-collector/receiver"
-	"github.com/open-telemetry/opentelemetry-collector/receiver/opencensusreceiver"
+	"github.com/pmm-sumo/opentelemetry-collector/config/configmodels"
+	"github.com/pmm-sumo/opentelemetry-collector/exporter/loggingexporter"
+	"github.com/pmm-sumo/opentelemetry-collector/receiver"
+	"github.com/pmm-sumo/opentelemetry-collector/receiver/opencensusreceiver"
 )
 
 func Example_endToEnd() {

@@ -20,7 +20,7 @@ import (
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
 
-	"github.com/open-telemetry/opentelemetry-collector/internal/collector/telemetry"
+	"github.com/pmm-sumo/opentelemetry-collector/internal/collector/telemetry"
 )
 
 // Keys and stats for telemetry.

@@ -23,7 +23,7 @@ import (
 	"go.opencensus.io/trace"
 	"go.opencensus.io/trace/tracestate"
 
-	"github.com/open-telemetry/opentelemetry-collector/internal"
+	"github.com/pmm-sumo/opentelemetry-collector/internal"
 )
 
 var errNilSpan = errors.New("expected a non-nil span")

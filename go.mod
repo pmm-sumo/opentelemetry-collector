@@ -1,4 +1,4 @@
-module github.com/open-telemetry/opentelemetry-collector
+module github.com/pmm-sumo/opentelemetry-collector
 
 go 1.13
 

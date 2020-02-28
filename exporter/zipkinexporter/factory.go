@@ -19,9 +19,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector/config/configerror"
-	"github.com/open-telemetry/opentelemetry-collector/config/configmodels"
-	"github.com/open-telemetry/opentelemetry-collector/exporter"
+	"github.com/pmm-sumo/opentelemetry-collector/config/configerror"
+	"github.com/pmm-sumo/opentelemetry-collector/config/configmodels"
+	"github.com/pmm-sumo/opentelemetry-collector/exporter"
 )
 
 const (
@@ -54,7 +54,7 @@ func (f *Factory) CreateTraceExporter(logger *zap.Logger, config configmodels.Ex
 	zc := config.(*Config)
 
 	if zc.URL == "" {
-		// TODO https://github.com/open-telemetry/opentelemetry-collector/issues/215
+		// TODO https://github.com/pmm-sumo/opentelemetry-collector/issues/215
 		return nil, errors.New("exporter config requires a non-empty 'url'")
 	}
 

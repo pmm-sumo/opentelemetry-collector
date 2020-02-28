@@ -31,11 +31,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector/component"
-	"github.com/open-telemetry/opentelemetry-collector/consumer"
-	"github.com/open-telemetry/opentelemetry-collector/processor"
-	"github.com/open-telemetry/opentelemetry-collector/receiver/zipkinreceiver"
-	"github.com/open-telemetry/opentelemetry-collector/testutils"
+	"github.com/pmm-sumo/opentelemetry-collector/component"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer"
+	"github.com/pmm-sumo/opentelemetry-collector/processor"
+	"github.com/pmm-sumo/opentelemetry-collector/receiver/zipkinreceiver"
+	"github.com/pmm-sumo/opentelemetry-collector/testutils"
 )
 
 // This function tests that Zipkin spans that are received then processed roundtrip

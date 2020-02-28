@@ -28,7 +28,7 @@ import (
 	tracepb "github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1"
 	"github.com/golang/protobuf/ptypes/timestamp"
 
-	"github.com/open-telemetry/opentelemetry-collector/consumer/consumerdata"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer/consumerdata"
 )
 
 // LoadGenerator is a simple load generator.

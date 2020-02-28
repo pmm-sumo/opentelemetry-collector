@@ -33,11 +33,11 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
-	"github.com/open-telemetry/opentelemetry-collector/component"
-	"github.com/open-telemetry/opentelemetry-collector/consumer/consumerdata"
-	"github.com/open-telemetry/opentelemetry-collector/exporter/exportertest"
-	"github.com/open-telemetry/opentelemetry-collector/internal"
-	"github.com/open-telemetry/opentelemetry-collector/testutils"
+	"github.com/pmm-sumo/opentelemetry-collector/component"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer/consumerdata"
+	"github.com/pmm-sumo/opentelemetry-collector/exporter/exportertest"
+	"github.com/pmm-sumo/opentelemetry-collector/internal"
+	"github.com/pmm-sumo/opentelemetry-collector/testutils"
 )
 
 func TestJaegerAgentUDP_ThriftCompact_6831(t *testing.T) {

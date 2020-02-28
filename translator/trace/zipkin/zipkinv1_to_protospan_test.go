@@ -31,10 +31,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/open-telemetry/opentelemetry-collector/consumer/consumerdata"
-	tracetranslator "github.com/open-telemetry/opentelemetry-collector/translator/trace"
-	"github.com/open-telemetry/opentelemetry-collector/translator/trace/jaeger"
-	"github.com/open-telemetry/opentelemetry-collector/translator/trace/spandata"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer/consumerdata"
+	tracetranslator "github.com/pmm-sumo/opentelemetry-collector/translator/trace"
+	"github.com/pmm-sumo/opentelemetry-collector/translator/trace/jaeger"
+	"github.com/pmm-sumo/opentelemetry-collector/translator/trace/spandata"
 )
 
 func Test_hexIDToOCID(t *testing.T) {

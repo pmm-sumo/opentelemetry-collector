@@ -20,7 +20,7 @@ package memorylimiter
 import (
 	"time"
 
-	"github.com/open-telemetry/opentelemetry-collector/config/configmodels"
+	"github.com/pmm-sumo/opentelemetry-collector/config/configmodels"
 )
 
 // Config defines configuration for memory memoryLimiter processor.

@@ -15,7 +15,7 @@
 package receiver
 
 import (
-	"github.com/open-telemetry/opentelemetry-collector/component"
+	"github.com/pmm-sumo/opentelemetry-collector/component"
 )
 
 // Receiver defines functions that trace and metric receivers must implement.

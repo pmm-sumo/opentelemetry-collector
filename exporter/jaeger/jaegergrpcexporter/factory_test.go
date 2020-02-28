@@ -20,8 +20,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector/config/configcheck"
-	"github.com/open-telemetry/opentelemetry-collector/config/configerror"
+	"github.com/pmm-sumo/opentelemetry-collector/config/configcheck"
+	"github.com/pmm-sumo/opentelemetry-collector/config/configerror"
 )
 
 func TestCreateDefaultConfig(t *testing.T) {

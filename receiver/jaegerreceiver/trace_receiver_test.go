@@ -38,14 +38,14 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	"github.com/open-telemetry/opentelemetry-collector/component"
-	"github.com/open-telemetry/opentelemetry-collector/consumer/consumerdata"
-	"github.com/open-telemetry/opentelemetry-collector/exporter/exportertest"
-	"github.com/open-telemetry/opentelemetry-collector/internal"
-	"github.com/open-telemetry/opentelemetry-collector/receiver"
-	"github.com/open-telemetry/opentelemetry-collector/testutils"
-	tracetranslator "github.com/open-telemetry/opentelemetry-collector/translator/trace"
-	jaegertranslator "github.com/open-telemetry/opentelemetry-collector/translator/trace/jaeger"
+	"github.com/pmm-sumo/opentelemetry-collector/component"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer/consumerdata"
+	"github.com/pmm-sumo/opentelemetry-collector/exporter/exportertest"
+	"github.com/pmm-sumo/opentelemetry-collector/internal"
+	"github.com/pmm-sumo/opentelemetry-collector/receiver"
+	"github.com/pmm-sumo/opentelemetry-collector/testutils"
+	tracetranslator "github.com/pmm-sumo/opentelemetry-collector/translator/trace"
+	jaegertranslator "github.com/pmm-sumo/opentelemetry-collector/translator/trace/jaeger"
 )
 
 func TestTraceSource(t *testing.T) {

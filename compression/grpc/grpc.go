@@ -19,7 +19,7 @@ import (
 
 	"google.golang.org/grpc/encoding/gzip"
 
-	"github.com/open-telemetry/opentelemetry-collector/compression"
+	"github.com/pmm-sumo/opentelemetry-collector/compression"
 )
 
 var (

@@ -22,7 +22,7 @@ Supported processors (sorted alphabetically):
 - [Sampling Processor](#sampling)
 - [Span Processor](#span)
 
-The [contributors repository](https://github.com/open-telemetry/opentelemetry-collector-contrib)
+The [contributors repository](https://github.com/pmm-sumo/opentelemetry-collector-contrib)
  has more processors that can be added to custom builds of the Collector.
 
 ## <a name="data-ownership"></a>Data Ownership

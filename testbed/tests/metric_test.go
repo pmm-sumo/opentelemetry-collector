@@ -20,7 +20,7 @@ package tests
 import (
 	"testing"
 
-	"github.com/open-telemetry/opentelemetry-collector/testbed/testbed"
+	"github.com/pmm-sumo/opentelemetry-collector/testbed/testbed"
 )
 
 func TestMetricNoBackend10kDPSOpenCensus(t *testing.T) {

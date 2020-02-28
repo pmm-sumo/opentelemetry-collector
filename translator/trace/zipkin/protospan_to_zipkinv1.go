@@ -22,7 +22,7 @@ import (
 	zipkinmodel "github.com/openzipkin/zipkin-go/model"
 	"go.opencensus.io/trace"
 
-	tracetranslator "github.com/open-telemetry/opentelemetry-collector/translator/trace"
+	tracetranslator "github.com/pmm-sumo/opentelemetry-collector/translator/trace"
 )
 
 const (

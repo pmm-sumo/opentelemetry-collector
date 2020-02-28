@@ -24,8 +24,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/open-telemetry/opentelemetry-collector/config"
-	"github.com/open-telemetry/opentelemetry-collector/oterr"
+	"github.com/pmm-sumo/opentelemetry-collector/config"
+	"github.com/pmm-sumo/opentelemetry-collector/oterr"
 )
 
 // The regular expression for valid config field tag.

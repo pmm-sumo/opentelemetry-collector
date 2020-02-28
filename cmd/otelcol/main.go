@@ -19,9 +19,9 @@ package main
 import (
 	"log"
 
-	"github.com/open-telemetry/opentelemetry-collector/defaults"
-	"github.com/open-telemetry/opentelemetry-collector/internal/version"
-	"github.com/open-telemetry/opentelemetry-collector/service"
+	"github.com/pmm-sumo/opentelemetry-collector/defaults"
+	"github.com/pmm-sumo/opentelemetry-collector/internal/version"
+	"github.com/pmm-sumo/opentelemetry-collector/service"
 )
 
 func main() {

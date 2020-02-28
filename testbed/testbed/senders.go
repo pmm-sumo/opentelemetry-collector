@@ -21,11 +21,11 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector/config/configgrpc"
-	"github.com/open-telemetry/opentelemetry-collector/consumer/consumerdata"
-	"github.com/open-telemetry/opentelemetry-collector/exporter"
-	"github.com/open-telemetry/opentelemetry-collector/exporter/jaeger/jaegerthrifthttpexporter"
-	"github.com/open-telemetry/opentelemetry-collector/exporter/opencensusexporter"
+	"github.com/pmm-sumo/opentelemetry-collector/config/configgrpc"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer/consumerdata"
+	"github.com/pmm-sumo/opentelemetry-collector/exporter"
+	"github.com/pmm-sumo/opentelemetry-collector/exporter/jaeger/jaegerthrifthttpexporter"
+	"github.com/pmm-sumo/opentelemetry-collector/exporter/opencensusexporter"
 )
 
 // DataSender defines the interface that allows sending data. This is an interface
@@ -125,7 +125,7 @@ func (je *JaegerThriftDataSender) Start() error {
 func (je *JaegerThriftDataSender) GenConfigYAMLStr() string {
 	// Note that this generates a receiver config for agent.
 	// We only need to enable thrift_http protocol because that's what we use in tests.
-	// Due to bug in Jaeger receiver (https://github.com/open-telemetry/opentelemetry-collector/issues/445)
+	// Due to bug in Jaeger receiver (https://github.com/pmm-sumo/opentelemetry-collector/issues/445)
 	// which makes it impossible to disable protocols that we don't need to receive on we
 	// have to use fake ports for all endpoints except thrift_http, otherwise it is
 	// impossible to start the Collector because the standard ports for those protocols

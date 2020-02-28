@@ -19,11 +19,11 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector/component"
-	"github.com/open-telemetry/opentelemetry-collector/config/configerror"
-	"github.com/open-telemetry/opentelemetry-collector/config/configmodels"
-	"github.com/open-telemetry/opentelemetry-collector/exporter"
-	"github.com/open-telemetry/opentelemetry-collector/oterr"
+	"github.com/pmm-sumo/opentelemetry-collector/component"
+	"github.com/pmm-sumo/opentelemetry-collector/config/configerror"
+	"github.com/pmm-sumo/opentelemetry-collector/config/configmodels"
+	"github.com/pmm-sumo/opentelemetry-collector/exporter"
+	"github.com/pmm-sumo/opentelemetry-collector/oterr"
 )
 
 // builtExporter is an exporter that is built based on a config. It can have
@@ -188,7 +188,7 @@ func (eb *ExportersBuilder) buildExporter(
 
 	inputDataTypes := exportersInputDataTypes[config]
 	if inputDataTypes == nil {
-		// TODO  https://github.com/open-telemetry/opentelemetry-collector/issues/294
+		// TODO  https://github.com/pmm-sumo/opentelemetry-collector/issues/294
 		// Move this validation to config/config.go:validateConfig
 		// No data types where requested for this exporter. This can only happen
 		// if there are no pipelines associated with the exporter.

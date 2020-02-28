@@ -26,10 +26,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/open-telemetry/opentelemetry-collector/consumer/consumerdata"
-	"github.com/open-telemetry/opentelemetry-collector/internal"
-	tracetranslator "github.com/open-telemetry/opentelemetry-collector/translator/trace"
-	"github.com/open-telemetry/opentelemetry-collector/translator/trace/zipkin"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer/consumerdata"
+	"github.com/pmm-sumo/opentelemetry-collector/internal"
+	tracetranslator "github.com/pmm-sumo/opentelemetry-collector/translator/trace"
+	"github.com/pmm-sumo/opentelemetry-collector/translator/trace/zipkin"
 )
 
 func TestConvertSpansToTraceSpans_protobuf(t *testing.T) {

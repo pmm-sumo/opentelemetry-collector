@@ -21,8 +21,8 @@ import (
 	"go.opencensus.io/zpages"
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector/component"
-	"github.com/open-telemetry/opentelemetry-collector/extension"
+	"github.com/pmm-sumo/opentelemetry-collector/component"
+	"github.com/pmm-sumo/opentelemetry-collector/extension"
 )
 
 type zpagesExtension struct {

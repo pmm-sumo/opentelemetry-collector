@@ -14,7 +14,7 @@
 
 package probabilisticsamplerprocessor
 
-import "github.com/open-telemetry/opentelemetry-collector/config/configmodels"
+import "github.com/pmm-sumo/opentelemetry-collector/config/configmodels"
 
 // Config has the configuration guiding the trace sampler processor.
 type Config struct {

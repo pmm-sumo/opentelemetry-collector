@@ -16,7 +16,7 @@ Supported metric receivers (sorted alphabetically):
 - [Prometheus Receiver](#prometheus)
 - [VM Metrics Receiver](#vmmetrics)
 
-The [contributors repository](https://github.com/open-telemetry/opentelemetry-collector-contrib)
+The [contributors repository](https://github.com/pmm-sumo/opentelemetry-collector-contrib)
  has more receivers that can be added to custom builds of the collector.
 
 ## Configuring Receiver(s)

@@ -28,11 +28,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opencensus.io/stats/view"
 
-	"github.com/open-telemetry/opentelemetry-collector/consumer"
-	"github.com/open-telemetry/opentelemetry-collector/consumer/consumerdata"
-	"github.com/open-telemetry/opentelemetry-collector/consumer/consumererror"
-	"github.com/open-telemetry/opentelemetry-collector/internal/collector/telemetry"
-	"github.com/open-telemetry/opentelemetry-collector/processor"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer/consumerdata"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer/consumererror"
+	"github.com/pmm-sumo/opentelemetry-collector/internal/collector/telemetry"
+	"github.com/pmm-sumo/opentelemetry-collector/processor"
 )
 
 func TestQueuedProcessor_noEnqueueOnPermanentError(t *testing.T) {

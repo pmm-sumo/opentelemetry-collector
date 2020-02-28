@@ -17,7 +17,7 @@ package grpc
 import (
 	"testing"
 
-	"github.com/open-telemetry/opentelemetry-collector/compression"
+	"github.com/pmm-sumo/opentelemetry-collector/compression"
 )
 
 func TestGetGRPCCompressionKey(t *testing.T) {

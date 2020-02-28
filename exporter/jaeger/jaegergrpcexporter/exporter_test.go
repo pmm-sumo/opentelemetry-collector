@@ -20,8 +20,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/open-telemetry/opentelemetry-collector/config/configgrpc"
-	"github.com/open-telemetry/opentelemetry-collector/consumer/consumerdata"
+	"github.com/pmm-sumo/opentelemetry-collector/config/configgrpc"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer/consumerdata"
 )
 
 func TestNew(t *testing.T) {

@@ -109,7 +109,7 @@ $ ./bin/$($GOOS)/otelcol --config ./examples/demo/otel-collector-config.yaml
 Run the demo application:
 
 ```shell
-$ go run "$(go env GOPATH)/src/github.com/open-telemetry/opentelemetry-collector/examples/main.go"
+$ go run "$(go env GOPATH)/src/github.com/pmm-sumo/opentelemetry-collector/examples/main.go"
 ```
 
 You should be able to see the traces in your exporter(s) of choice. If you stop
@@ -309,7 +309,7 @@ The OpenTelemetry collector can be extended or embedded into other applications.
 
 The list of applications extending the collector:
 
-* [opentelemetry-collector-contrib](https://github.com/open-telemetry/opentelemetry-collector-contrib)
+* [opentelemetry-collector-contrib](https://github.com/pmm-sumo/opentelemetry-collector-contrib)
 * [jaeger-opentelemetry-collector](https://github.com/jaegertracing/jaeger-opentemenetry-collector)
 
 ### Owners
@@ -334,8 +334,8 @@ Maintainers ([@open-telemetry/collector-maintainers](https://github.com/orgs/ope
 
 [travis-image]: https://travis-ci.org/open-telemetry/opentelemetry-collector.svg?branch=master
 [travis-url]: https://travis-ci.org/open-telemetry/opentelemetry-collector
-[godoc-image]: https://godoc.org/github.com/open-telemetry/opentelemetry-collector?status.svg
-[godoc-url]: https://godoc.org/github.com/open-telemetry/opentelemetry-collector
+[godoc-image]: https://godoc.org/github.com/pmm-sumo/opentelemetry-collector?status.svg
+[godoc-url]: https://godoc.org/github.com/pmm-sumo/opentelemetry-collector
 [gitter-image]: https://badges.gitter.im/open-telemetry/opentelemetry-collector.svg
 [gitter-url]: https://gitter.im/open-telemetry/opentelemetry-collector?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 [codecov-image]: https://codecov.io/gh/open-telemetry/opentelemetry-collector/branch/master/graph/badge.svg

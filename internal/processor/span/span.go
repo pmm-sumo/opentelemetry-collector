@@ -21,7 +21,7 @@ import (
 
 	tracepb "github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1"
 
-	"github.com/open-telemetry/opentelemetry-collector/internal/processor"
+	"github.com/pmm-sumo/opentelemetry-collector/internal/processor"
 )
 
 var (

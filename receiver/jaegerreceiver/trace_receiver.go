@@ -47,13 +47,13 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
-	"github.com/open-telemetry/opentelemetry-collector/client"
-	"github.com/open-telemetry/opentelemetry-collector/component"
-	"github.com/open-telemetry/opentelemetry-collector/consumer"
-	"github.com/open-telemetry/opentelemetry-collector/observability"
-	"github.com/open-telemetry/opentelemetry-collector/oterr"
-	"github.com/open-telemetry/opentelemetry-collector/receiver"
-	jaegertranslator "github.com/open-telemetry/opentelemetry-collector/translator/trace/jaeger"
+	"github.com/pmm-sumo/opentelemetry-collector/client"
+	"github.com/pmm-sumo/opentelemetry-collector/component"
+	"github.com/pmm-sumo/opentelemetry-collector/consumer"
+	"github.com/pmm-sumo/opentelemetry-collector/observability"
+	"github.com/pmm-sumo/opentelemetry-collector/oterr"
+	"github.com/pmm-sumo/opentelemetry-collector/receiver"
+	jaegertranslator "github.com/pmm-sumo/opentelemetry-collector/translator/trace/jaeger"
 )
 
 // Configuration defines the behavior and the ports that
@@ -183,7 +183,7 @@ func (jr *jReceiver) collectorHTTPEnabled() bool {
 	return jr.config != nil && jr.config.CollectorHTTPPort > 0
 }
 
-// TODO https://github.com/open-telemetry/opentelemetry-collector/issues/267
+// TODO https://github.com/pmm-sumo/opentelemetry-collector/issues/267
 //	Remove ThriftTChannel support.
 func (jr *jReceiver) collectorThriftAddr() string {
 	var port int

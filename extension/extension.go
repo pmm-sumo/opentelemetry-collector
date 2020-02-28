@@ -17,7 +17,7 @@
 // to the service, examples: health check endpoint, z-pages, etc.
 package extension
 
-import "github.com/open-telemetry/opentelemetry-collector/component"
+import "github.com/pmm-sumo/opentelemetry-collector/component"
 
 // ServiceExtension is the interface for objects hosted by the OpenTelemetry Collector that
 // don't participate directly on data pipelines but provide some functionality

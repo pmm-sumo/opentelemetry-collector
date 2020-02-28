@@ -15,7 +15,7 @@
 package jaegerreceiver
 
 import (
-	"github.com/open-telemetry/opentelemetry-collector/receiver"
+	"github.com/pmm-sumo/opentelemetry-collector/receiver"
 )
 
 // The config field name to load the protocol map from

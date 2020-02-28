@@ -21,9 +21,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector/receiver"
-	"github.com/open-telemetry/opentelemetry-collector/receiver/jaegerreceiver"
-	"github.com/open-telemetry/opentelemetry-collector/receiver/opencensusreceiver"
+	"github.com/pmm-sumo/opentelemetry-collector/receiver"
+	"github.com/pmm-sumo/opentelemetry-collector/receiver/jaegerreceiver"
+	"github.com/pmm-sumo/opentelemetry-collector/receiver/opencensusreceiver"
 )
 
 // DataReceiver allows to receive traces or metrics. This is an interface that must
