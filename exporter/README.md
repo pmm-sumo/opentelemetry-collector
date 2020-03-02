@@ -138,6 +138,10 @@ The following settings can be configured:
 * `url:` URL to which the exporter is going to send Zipkin trace data. This
 setting doesn't have a default value and must be specified in the configuration.
 
+The following settings can be optionally configured:
+
+- `export_resource_labels` (default = false): Whether Resource labels are going to be merged with span attributes
+- `defaultservicename` (no default): What to name services missing this information
 Example:
 
 ```yaml
