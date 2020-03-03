@@ -16,7 +16,7 @@ package loggingexporter
 
 import (
 	"context"
-
+	"fmt"
 	"go.uber.org/zap"
 
 	"github.com/open-telemetry/opentelemetry-collector/config/configmodels"
@@ -33,12 +33,65 @@ func NewTraceExporter(config configmodels.Exporter, logger *zap.Logger) (exporte
 	return exporterhelper.NewTraceExporter(
 		config,
 		func(ctx context.Context, td consumerdata.TraceData) (int, error) {
-			logger.Info("TraceExporter", typeLog, nameLog, zap.Int("#spans", len(td.Spans)))
+			logger.Info("TraceExporter", typeLog, nameLog,
+				zap.Int("#spans", len(td.Spans)))
+
+			if td.Resource != nil {
+				logger.Info("TraceExporter Resource",
+					zap.String("type", td.Resource.Type),
+					zap.Int("#resourceLabels", len(td.Resource.Labels)))
+
+				logMap(logger, "Resource labels", &td.Resource.Labels)
+			}
+
+			if td.Node != nil {
+				logger.Debug("Node service name: "+td.Node.ServiceInfo.Name)
+				logMap(logger, "Node attributes", &td.Node.Attributes)
+			}
+
+			for i, span := range td.Spans {
+				logger.Debug("Span #"+string(i))
+				if span == nil {
+					logger.Debug("* Empty span")
+					continue
+				}
+
+				logAttr(logger, "Trace ID", string(span.TraceId))
+				logAttr(logger, "ID", string(span.SpanId))
+				logAttr(logger, "Parent ID", string(span.ParentSpanId))
+				logAttr(logger, "Name", span.Name.Value)
+				logAttr(logger, "Kind", span.Kind.String())
+				logAttr(logger, "Start time", span.StartTime.String())
+				logAttr(logger, "End time", span.EndTime.String())
+				logAttr(logger, "Status code", string(span.Status.Code))
+				logAttr(logger, "Status message", span.Status.Message)
+
+				logAttr(logger, "Span attributes", "")
+				for attr, value := range span.Attributes.AttributeMap {
+					logger.Debug(fmt.Sprintf("\t\t -> %s: %s", attr, value.String()))
+				}
+			}
+
 			// TODO: Add ability to record the received data
 			return 0, nil
 		},
 		exporterhelper.WithShutdown(logger.Sync),
 	)
+}
+
+func logAttr(logger *zap.Logger, label string, value string) {
+	logger.Debug(fmt.Sprintf("\t%-12s: %s", label, value))
+}
+
+func logMap(logger *zap.Logger, label string, data *map[string]string) {
+	if data == nil {
+		return
+	}
+
+	logger.Debug(label+":")
+	for label, value := range *data {
+		logger.Debug("\t -> "+label+": "+value)
+	}
 }
 
 // NewMetricsExporter creates an exporter.MetricsExporter that just drops the
