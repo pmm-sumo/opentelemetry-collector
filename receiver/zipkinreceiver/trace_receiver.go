@@ -17,6 +17,7 @@ package zipkinreceiver
 import (
 	"compress/gzip"
 	"compress/zlib"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -24,6 +25,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -289,9 +291,18 @@ const (
 // The ZipkinReceiver receives spans from endpoint /api/v2 as JSON,
 // unmarshals them and sends them along to the nextConsumer.
 func (zr *ZipkinReceiver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	parentCtx := r.Context()
+	parentCtx := context.Background()
+
+	if c, ok := client.FromContext(parentCtx); ok {
+		fmt.Fprintf(os.Stderr, "Client IP in BackgroundContext: %s", c.IP)
+	}
+
 	if c, ok := client.FromHTTP(r); ok {
 		parentCtx = client.NewContext(parentCtx, c)
+	}
+
+	if c, ok := client.FromContext(parentCtx); ok {
+		fmt.Fprintf(os.Stderr, "Client IP after New Context: %s", c.IP)
 	}
 
 	// Trace this method

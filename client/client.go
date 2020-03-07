@@ -17,8 +17,10 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
+	"os"
 
 	"google.golang.org/grpc/peer"
 )
@@ -54,6 +56,15 @@ func FromGRPC(ctx context.Context) (*Client, bool) {
 
 // FromHTTP takes a net/http Request object and tries to extract client information from it
 func FromHTTP(r *http.Request) (*Client, bool) {
+	fmt.Fprintf(os.Stderr, "Remote IP set to: %s", r.RemoteAddr)
+
+	for k, v := range r.Header {
+		fmt.Fprintf(os.Stderr, "Remote Header %s=%s", k, v)
+	}
+
+	r.Referer()
+	r.UserAgent()
+
 	ip := parseIP(r.RemoteAddr)
 	if ip == "" {
 		return nil, false
