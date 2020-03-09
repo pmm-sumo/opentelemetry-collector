@@ -16,6 +16,7 @@ package loggingexporter
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"strings"
 
@@ -75,7 +76,18 @@ func (s *loggingExporter) pushTraceData(
 	if debug {
 		if td.Node != nil {
 			buf.logEntry("Node service name: %s", td.Node.ServiceInfo.Name)
+			id := td.Node.Identifier
+			if id != nil {
+				buf.logEntry("HostName: %s", id.HostName)
+				buf.logEntry("PID %s", id.Pid)
+			}
 			buf.logMap("Node attributes", &td.Node.Attributes)
+			li := td.Node.LibraryInfo
+			if li != nil {
+				buf.logEntry("Library language: %s", li.Language.String())
+				buf.logEntry("Core library version: %s", li.CoreLibraryVersion)
+				buf.logEntry("Exporter version: %s", li.ExporterVersion)
+			}
 		}
 	}
 
@@ -90,9 +102,9 @@ func (s *loggingExporter) pushTraceData(
 				continue
 			}
 
-			buf.logAttr("Trace ID", string(span.TraceId))
-			buf.logAttr("ID", string(span.SpanId))
-			buf.logAttr("Parent ID", string(span.ParentSpanId))
+			buf.logAttr("Trace ID", hex.EncodeToString(span.TraceId))
+			buf.logAttr("ID", hex.EncodeToString(span.SpanId))
+			buf.logAttr("Parent ID", hex.EncodeToString(span.ParentSpanId))
 			buf.logAttr("Name", span.Name.Value)
 			buf.logAttr("Kind", span.Kind.String())
 			buf.logAttr("Start time", span.StartTime.String())
@@ -105,7 +117,17 @@ func (s *loggingExporter) pushTraceData(
 			if span.Attributes != nil {
 				buf.logAttr("Span attributes", "")
 				for attr, value := range span.Attributes.AttributeMap {
-					buf.logEntry("         -> %s: %s", attr, value.String())
+					v := ""
+					ts := value.GetStringValue()
+
+					if ts != nil {
+						v = ts.Value
+					} else {
+						// For other types, just use the proto compact form rather than digging into series of checks
+						v = value.String()
+					}
+
+					buf.logEntry("         -> %s: %s", attr, v)
 				}
 			}
 
