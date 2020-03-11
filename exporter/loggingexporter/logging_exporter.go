@@ -19,6 +19,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strings"
+	"time"
 
 	"go.uber.org/zap"
 
@@ -52,10 +53,46 @@ func (b *traceDataBuffer) logMap(label string, data *map[string]string) {
 	}
 }
 
+const (
+	rollingAverageLen = 11
+)
+
 type loggingExporter struct {
 	level  string
 	logger *zap.Logger
+
+	times    []time.Time
+	counts   []int
+	position int
 }
+
+func (s *loggingExporter) updateRollingAverage(numSpans int) {
+	s.position = (s.position+1) % rollingAverageLen
+
+	s.times[s.position] = time.Now()
+	s.counts[s.position] = numSpans
+}
+
+/// getRollingAverageMaybe returns numbers of spans per second, basing on the last `rollingAverageLen` examples
+func (s *loggingExporter) getRollingAverageMaybe() *float64 {
+	if s.position != rollingAverageLen-1 {
+		return nil
+	}
+
+	// This is really just to make it KISS, without more flags, loops, etc.
+	duration := s.times[s.position].Sub(s.times[0]).Microseconds()
+	if duration > 0 {
+		sum := 0
+		for _, count := range s.counts {
+			sum += count
+		}
+		avg := float64(int64(sum) * 1E6) / float64(duration)
+		return &avg
+	}
+
+	return nil
+}
+
 
 func (s *loggingExporter) pushTraceData(
 	ctx context.Context,
@@ -65,7 +102,13 @@ func (s *loggingExporter) pushTraceData(
 
 	buf := traceDataBuffer{}
 
-	buf.logEntry("TraceData with %d spans", len(td.Spans))
+	s.updateRollingAverage(len(td.Spans))
+	spansPerSec := s.getRollingAverageMaybe()
+	if spansPerSec != nil {
+		buf.logEntry("TraceData with %d spans. Current average: %.2f spans/s", len(td.Spans), *spansPerSec)
+	} else {
+		buf.logEntry("TraceData with %d spans", len(td.Spans))
+	}
 
 	if td.Resource != nil {
 		buf.logEntry("Resource %s with %d labels", td.Resource.Type, len(td.Resource.Labels))
@@ -145,6 +188,9 @@ func NewTraceExporter(config configmodels.Exporter, level string, logger *zap.Lo
 	s := &loggingExporter{
 		level:  level,
 		logger: logger,
+		times: make([]time.Time, rollingAverageLen),
+		counts: make([]int, rollingAverageLen),
+		position: -1,
 	}
 
 	return exporterhelper.NewTraceExporter(
