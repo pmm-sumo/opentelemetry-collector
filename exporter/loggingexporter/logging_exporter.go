@@ -60,6 +60,7 @@ const (
 
 type loggingExporter struct {
 	logger *zap.Logger
+	name   zap.Field
 	debug  bool
 
 	times    []time.Time
@@ -143,7 +144,7 @@ func (s *loggingExporter) pushTraceData(
 		}
 	}
 
-	s.logger.Info(buf.str.String())
+	s.logger.Info(buf.str.String(), s.name)
 
 	if s.debug {
 		for i, span := range td.Spans {
@@ -183,7 +184,7 @@ func (s *loggingExporter) pushTraceData(
 				}
 			}
 
-			s.logger.Debug(buf.str.String())
+			s.logger.Debug(buf.str.String(), s.name)
 		}
 	}
 
@@ -195,6 +196,7 @@ func (s *loggingExporter) pushTraceData(
 func NewTraceExporter(config configmodels.Exporter, level string, logger *zap.Logger) (exporter.TraceExporter, error) {
 	s := &loggingExporter{
 		debug:  level == "debug",
+		name:   zap.String("exporter", config.Name()),
 		logger: logger,
 		times: make([]time.Time, rollingAverageLen),
 		counts: make([]int, rollingAverageLen),
