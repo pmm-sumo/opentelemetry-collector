@@ -264,6 +264,8 @@ Please refer to [config.go](batchprocessor/config.go) for the config spec.
 The following configuration options can be modified:
 - `send_batch_size` (default = 8192): Number of spans after which a batch will 
 be sent.
+- `send_batch_hard_limit` (default = 0 - no limit): Maximum number of spans in a batch. If
+more spans are present, batch will be split into smaller ones. 0 means no limit.
 - `timeout` (default = 200ms): Time duration after which a batch will be sent
 regardless of size.
 

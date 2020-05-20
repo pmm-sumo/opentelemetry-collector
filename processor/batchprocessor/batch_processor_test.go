@@ -17,6 +17,7 @@ package batchprocessor
 import (
 	"context"
 	"fmt"
+	"math"
 	"sync"
 	"testing"
 	"time"
@@ -64,6 +65,37 @@ func TestBatchProcessorSpansDelivered(t *testing.T) {
 				sender.spansReceivedByName[getTestSpanName(requestNum, spanIndex)])
 		}
 	}
+}
+
+func TestBatchProcessorSpansDeliveredWithHardLimit(t *testing.T) {
+	sender := newTestSender()
+	cfg := generateDefaultConfig()
+	cfg.SendBatchSize = 128
+	cfg.SendBatchHardLimit = 256
+	creationParams := component.ProcessorCreateParams{Logger: zap.NewNop()}
+	batcher := newBatchProcessor(creationParams, sender, cfg)
+	requestCount := 40
+	spansPerRequest := 500
+	waitForCn := sender.waitFor(requestCount*spansPerRequest, 5*time.Second)
+	traceDataSlice := make([]pdata.Traces, 0, requestCount)
+	for requestNum := 0; requestNum < requestCount; requestNum++ {
+		td := testdata.GenerateTraceDataManySpansSameResource(spansPerRequest)
+		spans := td.ResourceSpans().At(0).InstrumentationLibrarySpans().At(0).Spans()
+		for spanIndex := 0; spanIndex < spansPerRequest; spanIndex++ {
+			spans.At(spanIndex).SetName(getTestSpanName(requestNum, spanIndex))
+		}
+		traceDataSlice = append(traceDataSlice, td.Clone())
+		go batcher.ConsumeTraces(context.Background(), td)
+	}
+
+	err := <-waitForCn
+	if err != nil {
+		t.Errorf("failed to wait for sender %s", err)
+	}
+
+	require.Equal(t, requestCount*spansPerRequest, sender.spansReceived)
+	expectedBatchesNum := requestCount * int(math.Ceil(float64(spansPerRequest) / float64(cfg.SendBatchHardLimit)))
+	require.EqualValues(t, expectedBatchesNum, len(sender.traceDataReceived))
 }
 
 func TestBatchProcessorSentBySize(t *testing.T) {
