@@ -42,8 +42,9 @@ type batchProcessor struct {
 	name   string
 	logger *zap.Logger
 
-	sendBatchSize uint32
-	timeout       time.Duration
+	sendBatchSize      uint32
+	sendBatchHardLimit uint32
+	timeout            time.Duration
 
 	timer *time.Timer
 	done  chan struct{}
@@ -77,9 +78,10 @@ func newBatchTracesProcessor(params component.ProcessorCreateParams, trace consu
 			name:   cfg.Name(),
 			logger: params.Logger,
 
-			sendBatchSize: cfg.SendBatchSize,
-			timeout:       cfg.Timeout,
-			done:          make(chan struct{}),
+			sendBatchSize:      cfg.SendBatchSize,
+			sendBatchHardLimit: cfg.SendBatchHardLimit,
+			timeout:            cfg.Timeout,
+			done:               make(chan struct{}),
 		},
 		traceConsumer: trace,
 
@@ -173,7 +175,16 @@ func (bp *batchTraceProcessor) sendItems(measure *stats.Int64Measure) {
 	statsTags := []tag.Mutator{tag.Insert(processor.TagProcessorNameKey, bp.name)}
 	_ = stats.RecordWithTags(context.Background(), statsTags, measure.M(1))
 
-	_ = bp.traceConsumer.ConsumeTraces(context.Background(), bp.batchTraces.getTraceData())
+	data := bp.batchTraces.getTraceData()
+	if bp.sendBatchHardLimit == 0 || data.SpanCount() < int(bp.sendBatchHardLimit) {
+		_ = bp.traceConsumer.ConsumeTraces(context.Background(), data)
+	} else {
+		batches := SplitItems(data, int(bp.sendBatchHardLimit))
+		for _, batch := range batches {
+			_ = bp.traceConsumer.ConsumeTraces(context.Background(), batch)
+		}
+	}
+
 	bp.batchTraces.reset()
 }
 

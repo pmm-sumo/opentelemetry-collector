@@ -27,8 +27,9 @@ const (
 	// The value of "type" key in configuration.
 	typeStr = "batch"
 
-	defaultSendBatchSize = uint32(8192)
-	defaultTimeout       = 200 * time.Millisecond
+	defaultSendBatchSize      = uint32(8192)
+	defaultSendBatchHardLimit = uint32(0)
+	defaultTimeout            = 200 * time.Millisecond
 )
 
 // Factory is the factory for batch processor.
@@ -73,7 +74,8 @@ func generateDefaultConfig() *Config {
 			TypeVal: typeStr,
 			NameVal: typeStr,
 		},
-		SendBatchSize: defaultSendBatchSize,
-		Timeout:       defaultTimeout,
+		SendBatchSize:      defaultSendBatchSize,
+		SendBatchHardLimit: defaultSendBatchHardLimit,
+		Timeout:            defaultTimeout,
 	}
 }
