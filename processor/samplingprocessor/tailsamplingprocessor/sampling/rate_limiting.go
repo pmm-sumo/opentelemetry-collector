@@ -47,6 +47,11 @@ func (r *rateLimiting) OnLateArrivingSpans(earlyDecision Decision, spans []*trac
 	return nil
 }
 
+// EvaluateSecondChance looks at the trace again and if it can/cannot be fit, returns a SamplingDecision
+func (r *rateLimiting) EvaluateSecondChance(traceID []byte, trace *TraceData) (Decision, error) {
+	return NotSampled, nil
+}
+
 // Evaluate looks at the trace data and returns a corresponding SamplingDecision.
 func (r *rateLimiting) Evaluate(traceID []byte, trace *TraceData) (Decision, error) {
 	r.logger.Debug("Evaluating spans in rate-limiting filter")

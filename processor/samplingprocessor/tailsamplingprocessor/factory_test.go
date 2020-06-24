@@ -15,6 +15,7 @@
 package tailsamplingprocessor
 
 import (
+	"go.opentelemetry.io/collector/processor/samplingprocessor/tailsamplingprocessor/config"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -35,13 +36,13 @@ func TestCreateDefaultConfig(t *testing.T) {
 func TestCreateProcessor(t *testing.T) {
 	factory := &Factory{}
 
-	cfg := factory.CreateDefaultConfig().(*Config)
+	cfg := factory.CreateDefaultConfig().(*config.Config)
 	// Manually set required fields
 	cfg.ExpectedNewTracesPerSec = 64
-	cfg.PolicyCfgs = []PolicyCfg{
+	cfg.PolicyCfgs = []config.PolicyCfg{
 		{
 			Name: "test-policy",
-			Type: AlwaysSample,
+			Type: config.AlwaysSample,
 		},
 	}
 

@@ -49,6 +49,9 @@ const (
 	// Sampled is used to indicate that the decision was already taken
 	// to sample the data.
 	Sampled
+	// SecondChance is a special category that allows to make a final decision
+	// after all batches are processed. It should be converted to Sampled or NotSampled
+	SecondChance
 	// NotSampled is used to indicate that the decision was already taken
 	// to not sample the data.
 	NotSampled
@@ -68,6 +71,9 @@ type PolicyEvaluator interface {
 
 	// Evaluate looks at the trace data and returns a corresponding SamplingDecision.
 	Evaluate(traceID []byte, trace *TraceData) (Decision, error)
+
+	// EvaluateSecondChance looks at the trace again and if it can/cannot be fit, returns a SamplingDecision
+	EvaluateSecondChance(traceID []byte, trace *TraceData) (Decision, error)
 
 	// OnDroppedSpans is called when the trace needs to be dropped, due to memory
 	// pressure, before the decision_wait time has been reached.

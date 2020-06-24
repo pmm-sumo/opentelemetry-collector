@@ -24,6 +24,7 @@ import (
 
 	"go.opentelemetry.io/collector/config"
 	"go.opentelemetry.io/collector/config/configmodels"
+	tsconfig "go.opentelemetry.io/collector/processor/samplingprocessor/tailsamplingprocessor/config"
 )
 
 func TestLoadConfig(t *testing.T) {
@@ -38,7 +39,7 @@ func TestLoadConfig(t *testing.T) {
 	require.NotNil(t, cfg)
 
 	assert.Equal(t, cfg.Processors["tail_sampling"],
-		&Config{
+		&tsconfig.Config{
 			ProcessorSettings: configmodels.ProcessorSettings{
 				TypeVal: "tail_sampling",
 				NameVal: "tail_sampling",
@@ -46,25 +47,40 @@ func TestLoadConfig(t *testing.T) {
 			DecisionWait:            10 * time.Second,
 			NumTraces:               100,
 			ExpectedNewTracesPerSec: 10,
-			PolicyCfgs: []PolicyCfg{
+			PolicyCfgs: []tsconfig.PolicyCfg{
 				{
 					Name: "test-policy-1",
-					Type: AlwaysSample,
+					Type: tsconfig.AlwaysSample,
 				},
 				{
 					Name:                "test-policy-2",
-					Type:                NumericAttribute,
-					NumericAttributeCfg: NumericAttributeCfg{Key: "key1", MinValue: 50, MaxValue: 100},
+					Type:                tsconfig.NumericAttribute,
+					NumericAttributeCfg: tsconfig.NumericAttributeCfg{Key: "key1", MinValue: 50, MaxValue: 100},
 				},
 				{
 					Name:               "test-policy-3",
-					Type:               StringAttribute,
-					StringAttributeCfg: StringAttributeCfg{Key: "key2", Values: []string{"value1", "value2"}},
+					Type:               tsconfig.StringAttribute,
+					StringAttributeCfg: tsconfig.StringAttributeCfg{Key: "key2", Values: []string{"value1", "value2"}},
 				},
 				{
 					Name:            "test-policy-4",
-					Type:            RateLimiting,
-					RateLimitingCfg: RateLimitingCfg{SpansPerSecond: 35},
+					Type:            tsconfig.RateLimiting,
+					RateLimitingCfg: tsconfig.RateLimitingCfg{SpansPerSecond: 35},
+				},
+				{
+					Name: "test-policy-5",
+					Type: tsconfig.Cascading,
+					SpansPerSecond: 1000,
+					Rules:     []tsconfig.CascadingRuleCfg{
+						{
+							SpansPerSecond: 123,
+							NumericAttributeCfg: &tsconfig.NumericAttributeCfg{
+								Key: "key1", MinValue: 50, MaxValue: 100},
+						},
+						{
+							SpansPerSecond: -1,
+						},
+					},
 				},
 			},
 		})

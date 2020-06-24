@@ -15,6 +15,7 @@
 package tailsamplingprocessor
 
 import (
+	"go.opentelemetry.io/collector/processor/samplingprocessor/tailsamplingprocessor/config"
 	"time"
 
 	"go.uber.org/zap"
@@ -41,7 +42,7 @@ func (f *Factory) Type() configmodels.Type {
 
 // CreateDefaultConfig creates the default configuration for processor.
 func (f *Factory) CreateDefaultConfig() configmodels.Processor {
-	return &Config{
+	return &config.Config{
 		DecisionWait: 30 * time.Second,
 		NumTraces:    50000,
 	}
@@ -53,7 +54,7 @@ func (f *Factory) CreateTraceProcessor(
 	nextConsumer consumer.TraceConsumerOld,
 	cfg configmodels.Processor,
 ) (component.TraceProcessorOld, error) {
-	tCfg := cfg.(*Config)
+	tCfg := cfg.(*config.Config)
 	return newTraceProcessor(logger, nextConsumer, *tCfg)
 }
 

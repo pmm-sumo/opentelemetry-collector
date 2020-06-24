@@ -29,6 +29,20 @@ processors:
             name: test-policy-4,
             type: rate_limiting,
             rate_limiting: {spans_per_second: 35}
+          },
+          {
+            name: test-policy-5,
+            type: cascading,
+            spans_per_second: 1000,
+            rules: [
+              {
+                spans_per_second: 123,
+                numeric_attribute: {key: key1, min_value: 50, max_value: 100}
+              },
+              {
+                spans_per_second: -1
+              }
+            ]
          }
       ]
 

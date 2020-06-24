@@ -41,6 +41,11 @@ func (as *alwaysSample) OnLateArrivingSpans(earlyDecision Decision, spans []*tra
 	return nil
 }
 
+// EvaluateSecondChance looks at the trace again and if it can/cannot be fit, returns a SamplingDecision
+func (as *alwaysSample) EvaluateSecondChance(traceID []byte, trace *TraceData) (Decision, error) {
+	return NotSampled, nil
+}
+
 // Evaluate looks at the trace data and returns a corresponding SamplingDecision.
 func (as *alwaysSample) Evaluate(traceID []byte, trace *TraceData) (Decision, error) {
 	as.logger.Debug("Evaluating spans in always-sample filter")

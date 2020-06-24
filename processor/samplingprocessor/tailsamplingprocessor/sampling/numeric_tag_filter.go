@@ -47,6 +47,11 @@ func (naf *numericAttributeFilter) OnLateArrivingSpans(earlyDecision Decision, s
 	return nil
 }
 
+// EvaluateSecondChance looks at the trace again and if it can/cannot be fit, returns a SamplingDecision
+func (naf *numericAttributeFilter) EvaluateSecondChance(traceID []byte, trace *TraceData) (Decision, error) {
+	return NotSampled, nil
+}
+
 // Evaluate looks at the trace data and returns a corresponding SamplingDecision.
 func (naf *numericAttributeFilter) Evaluate(traceID []byte, trace *TraceData) (Decision, error) {
 	naf.logger.Debug("Evaluating spans in numeric-attribute filter")
