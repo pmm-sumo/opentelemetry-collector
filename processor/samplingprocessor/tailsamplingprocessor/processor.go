@@ -133,7 +133,9 @@ func getPolicyEvaluator(logger *zap.Logger, cfg *config.PolicyCfg) (sampling.Pol
 		rlfCfg := cfg.RateLimitingCfg
 		return sampling.NewRateLimiting(logger, rlfCfg.SpansPerSecond), nil
 	case config.Cascading:
-		return sampling.NewCascadingFilter(logger, cfg), nil
+		return sampling.NewCascadingFilter(logger, cfg)
+	case config.Duration:
+		return sampling.NewDurationFilter(logger, cfg.DurationCfg.MinDurationMicros), nil
 	default:
 		return nil, fmt.Errorf("unknown sampling policy type %s", cfg.Type)
 	}

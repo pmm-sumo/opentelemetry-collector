@@ -36,14 +36,26 @@ processors:
             spans_per_second: 1000,
             rules: [
               {
+                name: "num",
                 spans_per_second: 123,
                 numeric_attribute: {key: key1, min_value: 50, max_value: 100}
               },
               {
+                name: "dur",
+                spans_per_second: 50,
+                duration: {min_duration_micros: 9000000 }
+              },
+              {
+                name: "everything_else",
                 spans_per_second: -1
               }
             ]
-         }
+         },
+         {
+            name: test-policy-6,
+            type: duration,
+            duration: {min_duration_micros: 100000}
+         },
       ]
 
 service:

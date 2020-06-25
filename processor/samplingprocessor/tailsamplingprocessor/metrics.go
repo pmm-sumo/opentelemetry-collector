@@ -18,6 +18,7 @@ import (
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
+	"go.opentelemetry.io/collector/processor/samplingprocessor/tailsamplingprocessor/sampling"
 
 	"go.opentelemetry.io/collector/internal/collector/telemetry"
 	"go.opentelemetry.io/collector/obsreport"
@@ -131,6 +132,8 @@ func SamplingProcessorMetricViews(level telemetry.Level) []*view.View {
 		countTraceDroppedTooEarlyView,
 		countTraceIDArrivalView,
 		trackTracesOnMemorylView,
+
+		sampling.CountTracesSampledRulesView,
 	}
 
 	return obsreport.ProcessorMetricViews(typeStr, legacyViews)

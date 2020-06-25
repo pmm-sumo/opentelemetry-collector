@@ -73,13 +73,29 @@ func TestLoadConfig(t *testing.T) {
 					SpansPerSecond: 1000,
 					Rules:     []tsconfig.CascadingRuleCfg{
 						{
+							Name: "num",
 							SpansPerSecond: 123,
 							NumericAttributeCfg: &tsconfig.NumericAttributeCfg{
 								Key: "key1", MinValue: 50, MaxValue: 100},
 						},
 						{
+							Name: "dur",
+							SpansPerSecond: 50,
+							DurationCfg: &tsconfig.DurationCfg{
+								MinDurationMicros: 9000000,
+							},
+						},
+						{
+							Name: "everything_else",
 							SpansPerSecond: -1,
 						},
+					},
+				},
+				{
+					Name:            "test-policy-6",
+					Type:            tsconfig.Duration,
+					DurationCfg: tsconfig.DurationCfg{
+						MinDurationMicros: 100000,
 					},
 				},
 			},
