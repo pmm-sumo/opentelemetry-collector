@@ -30,7 +30,7 @@ func TestClientContext(t *testing.T) {
 		"1.1.1.1", "127.0.0.1", "1111", "ip",
 	}
 	for _, ip := range ips {
-		ctx := NewContext(context.Background(), &Client{ip})
+		ctx := NewContext(context.Background(), &Client{ip, ""})
 		c, ok := FromContext(ctx)
 		assert.True(t, ok)
 		assert.NotNil(t, c)
@@ -53,8 +53,12 @@ func TestParsingGRPC(t *testing.T) {
 }
 
 func TestParsingHTTP(t *testing.T) {
-	client, ok := FromHTTP(&http.Request{RemoteAddr: "192.168.1.2"})
+	var h = http.Header{}
+	h.Set(AuthTokenHeader, "abc")
+
+	client, ok := FromHTTP(&http.Request{RemoteAddr: "192.168.1.2", Header: h})
 	assert.True(t, ok)
 	assert.NotNil(t, client)
-	assert.Equal(t, client.IP, "192.168.1.2")
+	assert.Equal(t,"abc", client.Token)
+	assert.Equal(t,"192.168.1.2", client.IP)
 }
