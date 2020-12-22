@@ -18,7 +18,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"go.opentelemetry.io/collector/client"
 	"net"
 	"net/http"
 	"strings"
@@ -32,6 +31,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 
+	"go.opentelemetry.io/collector/client"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/component/componenttest"
 	"go.opentelemetry.io/collector/config/confighttp"
@@ -136,15 +136,14 @@ func TestTraceRoundTrip(t *testing.T) {
 
 func TestTraceUrlToken(t *testing.T) {
 	const TokenValue = "my_token"
-	const TokenPLaceholder = "$TOKEN"
+	const TokenPlaceholder = "$TOKEN"
 	const url = "https://some/url/"
-	addr := testutil.GetAvailableLocalAddress(t)
-	exp := startTraceExporter(t, url + TokenPLaceholder, url + TokenPLaceholder)
+	exp := startTraceExporter(t, url+TokenPlaceholder, url+TokenPlaceholder)
 	td := testdata.GenerateTraceDataOneSpan()
-	ctx := client.NewContext(context.Background(), &client.Client{IP: fmt.Sprintf("http://%s/v1/traces", addr), Token: TokenValue})
+	ctx := client.NewContext(context.Background(), &client.Client{IP: "", Token: TokenValue})
 	err := exp.ConsumeTraces(ctx, td)
 	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), url + TokenValue))
+	assert.True(t, strings.Contains(err.Error(), url+TokenValue))
 }
 
 func TestMetricsError(t *testing.T) {
