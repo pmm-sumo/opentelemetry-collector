@@ -18,8 +18,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"go.opentelemetry.io/collector/client"
 	"net"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -130,6 +132,19 @@ func TestTraceRoundTrip(t *testing.T) {
 			assert.EqualValues(t, td, allTraces[0])
 		})
 	}
+}
+
+func TestTraceUrlToken(t *testing.T) {
+	const TokenValue = "my_token"
+	const TokenPLaceholder = "$TOKEN"
+	const url = "https://some/url/"
+	addr := testutil.GetAvailableLocalAddress(t)
+	exp := startTraceExporter(t, url + TokenPLaceholder, url + TokenPLaceholder)
+	td := testdata.GenerateTraceDataOneSpan()
+	ctx := client.NewContext(context.Background(), &client.Client{IP: fmt.Sprintf("http://%s/v1/traces", addr), Token: TokenValue})
+	err := exp.ConsumeTraces(ctx, td)
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), url + TokenValue))
 }
 
 func TestMetricsError(t *testing.T) {

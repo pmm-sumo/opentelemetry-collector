@@ -19,11 +19,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"go.opentelemetry.io/collector/client"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -80,7 +82,15 @@ func (e *exporterImp) pushTraceData(ctx context.Context, traces pdata.Traces) (i
 		return traces.SpanCount(), consumererror.Permanent(err)
 	}
 
-	err = e.export(ctx, e.tracesURL, request)
+	const TOKEN = "$TOKEN"
+	if strings.Contains(e.tracesURL, TOKEN) {
+		var c, _ = client.FromContext(ctx)
+		var urlWithToken = strings.Replace(e.tracesURL, TOKEN, c.Token, 1)
+		err = e.export(ctx, urlWithToken, request)
+	} else {
+		err = e.export(ctx, e.tracesURL, request)
+	}
+
 	if err != nil {
 		return traces.SpanCount(), err
 	}
