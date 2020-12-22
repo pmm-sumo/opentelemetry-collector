@@ -17,6 +17,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
 	"testing"
@@ -61,4 +62,13 @@ func TestParsingHTTP(t *testing.T) {
 	assert.NotNil(t, client)
 	assert.Equal(t,"abc", client.Token)
 	assert.Equal(t,"192.168.1.2", client.IP)
+}
+
+func TestExtractingFromURI(t *testing.T) {
+	token := "ZaVnCaaaaV0aaaZ8s_abcdefghijklmnopqrstuv111111111111222222222223333333444444444445555555555666666666677777777888888889999999999911111aaaaabbb=="
+	extractedToken := tokenFromURI(fmt.Sprintf("https://some-endpoint/example.com/receiver/v1/trace/%s", token))
+	assert.Equal(t, token, extractedToken)
+
+	extractedToken = tokenFromURI("https://some-endpoint/example.com/receiver/v1/trace/tooshort")
+	assert.Equal(t, "", extractedToken)
 }

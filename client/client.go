@@ -19,6 +19,7 @@ import (
 	"context"
 	"net"
 	"net/http"
+	"regexp"
 
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
@@ -27,6 +28,7 @@ import (
 type ctxKey struct{}
 
 const AuthTokenHeader = "Auth-Token"
+var TokenRegex = *regexp.MustCompile(`/([^/]{120,})$`)
 
 // Client represents a generic client that sends data to any receiver supported by the OT receiver
 type Client struct {
@@ -43,6 +45,14 @@ func NewContext(ctx context.Context, c *Client) context.Context {
 func FromContext(ctx context.Context) (*Client, bool) {
 	c, ok := ctx.Value(ctxKey{}).(*Client)
 	return c, ok
+}
+
+func tokenFromURI(uri string) string {
+	res := TokenRegex.FindAllStringSubmatch(uri, -1)
+	if len(res) == 1 && len(res[0]) == 2 {
+		return res[0][1]
+	}
+	return ""
 }
 
 // FromGRPC takes a GRPC context and tries to extract client information from it
@@ -69,6 +79,10 @@ func FromGRPC(ctx context.Context) (*Client, bool) {
 func FromHTTP(r *http.Request) (*Client, bool) {
 	ip := parseIP(r.RemoteAddr)
 	token := r.Header.Get(AuthTokenHeader)
+
+	if token == "" {
+		token = tokenFromURI(r.RequestURI)
+	}
 
 	if ip == "" && token == "" {
 		return nil, false
