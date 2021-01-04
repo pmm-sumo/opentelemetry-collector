@@ -70,6 +70,7 @@ const (
 	AttributeTelemetrySDKLanguage  = "telemetry.sdk.language"
 	AttributeTelemetrySDKName      = "telemetry.sdk.name"
 	AttributeTelemetrySDKVersion   = "telemetry.sdk.version"
+	AttributeSumoTelemetryExportTS = "sumologic.telemetry.sdk.export_timestamp"
 )
 
 // OpenTelemetry Semantic Convention values for Resource attribute "telemetry.sdk.language" values.

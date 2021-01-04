@@ -18,8 +18,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"go.opentelemetry.io/collector/translator/conventions"
 	"net"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
@@ -240,6 +242,35 @@ func TestLogsRoundTrip(t *testing.T) {
 			assert.EqualValues(t, md, allLogs[0])
 		})
 	}
+}
+
+func buildSimpleExportTsTrace(exportTs int) pdata.Traces {
+	exportTsStr := strconv.Itoa(exportTs)
+
+	span := pdata.NewSpan()
+	span.Attributes().UpdateString(conventions.AttributeSumoTelemetryExportTS, exportTsStr)
+	ils := pdata.NewInstrumentationLibrarySpans()
+	ils.Spans().Append(span)
+	rs := pdata.NewResourceSpans()
+	rs.Resource().Attributes().UpdateInt(conventions.AttributeSumoTelemetryExportTS, int64(exportTs))
+	rs.InstrumentationLibrarySpans().Append(ils)
+	traces := pdata.NewTraces()
+	traces.ResourceSpans().Append(rs)
+
+	return traces
+}
+
+func TestTimestampAdjustment(t *testing.T) {
+
+	receiveTs := time.Now()
+	exportTs := receiveTs.Add(2 * time.Second)
+
+	traces := buildSimpleExportTsTrace(1610000000000)
+	adjustedTraces := adjustExportTimestamp(traces, receiveTs, exportTs)
+	expectedTraces := buildSimpleExportTsTrace(1610000000000 + 2000)
+
+	assert.NotNil(t, adjustedTraces)
+	assert.EqualValues(t, expectedTraces, adjustedTraces)
 }
 
 func startTraceExporter(t *testing.T, baseURL string, overrideURL string) component.TracesExporter {

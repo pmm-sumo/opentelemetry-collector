@@ -35,4 +35,7 @@ type Config struct {
 
 	// The URL to send logs to. If omitted the Endpoint + "/v1/logs" will be used.
 	LogsEndpoint string `mapstructure:"logs_endpoint"`
+
+	// AdjustExportTimestamp controls if export_timestamp field is being adjusted with time spent in the Collector
+	AdjustExportTimestamp bool `mapstructure:"adjust_export_timestamp"`
 }

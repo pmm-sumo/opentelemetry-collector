@@ -37,6 +37,8 @@ The following settings can be optionally configured:
 - `read_buffer_size` (default = 0): ReadBufferSize for HTTP client.
 - `write_buffer_size` (default = 512 * 1024): WriteBufferSize for HTTP client.
 
+- `adjust_export_timestamp` (default = false): when `sumologic.telemetry.sdk.export_timestamp` attribute
+is set, it is being updated with the time span has spent in the collector
 
 Example:
 

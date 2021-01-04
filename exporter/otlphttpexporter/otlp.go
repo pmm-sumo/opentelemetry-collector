@@ -19,6 +19,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"go.opentelemetry.io/collector/client"
+	"go.opentelemetry.io/collector/translator/conventions"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -74,8 +76,53 @@ func newExporter(cfg configmodels.Exporter, logger *zap.Logger) (*exporterImp, e
 	}, nil
 }
 
-func (e *exporterImp) pushTraceData(ctx context.Context, traces pdata.Traces) (int, error) {
+func adjustExportTimestampAttrs(attrs pdata.AttributeMap, receiveTs time.Time, now time.Time) {
+	val, found := attrs.Get(conventions.AttributeSumoTelemetryExportTS)
+	deltaMs := now.Sub(receiveTs).Milliseconds()
+	if found {
+		if val.Type() == pdata.AttributeValueINT {
+			attrs.UpdateInt(conventions.AttributeSumoTelemetryExportTS, val.IntVal()+deltaMs)
+		} else if val.Type() == pdata.AttributeValueDOUBLE {
+			attrs.UpdateDouble(conventions.AttributeSumoTelemetryExportTS, val.DoubleVal()+float64(deltaMs))
+		} else if val.Type() == pdata.AttributeValueSTRING {
+			asInt, err := strconv.Atoi(val.StringVal())
+			if err != nil && asInt > 0 {
+				asInt += int(deltaMs)
+				attrs.UpdateString(conventions.AttributeSumoTelemetryExportTS, strconv.Itoa(asInt))
+			}
+		}
+	}
+}
+
+func adjustExportTimestamp(inputTraces pdata.Traces, receiveTs time.Time, currentTs time.Time) pdata.Traces {
+	traces := inputTraces.Clone()
+	rss := traces.ResourceSpans()
+	for i := 0; i < rss.Len(); i++ {
+		res := rss.At(i).Resource()
+		adjustExportTimestampAttrs(res.Attributes(), receiveTs, currentTs)
+		for j := 0; j < rss.At(i).InstrumentationLibrarySpans().Len(); j++ {
+			spans := rss.At(i).InstrumentationLibrarySpans().At(j).Spans()
+			for k := 0; k < spans.Len(); k++ {
+				adjustExportTimestampAttrs(spans.At(k).Attributes(), receiveTs, currentTs)
+			}
+		}
+	}
+
+	return traces
+}
+
+func (e *exporterImp) pushTraceData(ctx context.Context, inputTraces pdata.Traces) (int, error) {
+	traces := inputTraces
+
+	if e.config.AdjustExportTimestamp {
+		cCtx, found := client.FromContext(ctx)
+		if found {
+			traces = adjustExportTimestamp(inputTraces, cCtx.ReceiveTS, time.Now())
+		}
+	}
+
 	request, err := traces.ToOtlpProtoBytes()
+
 	if err != nil {
 		return traces.SpanCount(), consumererror.Permanent(err)
 	}
