@@ -81,9 +81,8 @@ func TestCreateProcessors(t *testing.T) {
 				factory := NewFactory()
 
 				tp, tErr := factory.CreateTracesProcessor(context.Background(), component.ProcessorCreateParams{Logger: zap.NewNop()}, cfg, consumertest.NewTracesNop())
-				// Not implemented error
-				assert.NotNil(t, tErr)
-				assert.Nil(t, tp)
+				assert.Equal(t, test.succeed, tp != nil)
+				assert.Equal(t, test.succeed, tErr == nil)
 
 				mp, mErr := factory.CreateMetricsProcessor(context.Background(), component.ProcessorCreateParams{Logger: zap.NewNop()}, cfg, consumertest.NewMetricsNop())
 				assert.Equal(t, test.succeed, mp != nil)

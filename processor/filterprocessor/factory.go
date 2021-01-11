@@ -35,6 +35,7 @@ func NewFactory() component.ProcessorFactory {
 	return processorhelper.NewFactory(
 		typeStr,
 		createDefaultConfig,
+		processorhelper.WithTraces(createTracesProcessor),
 		processorhelper.WithMetrics(createMetricsProcessor))
 }
 
@@ -58,6 +59,23 @@ func createMetricsProcessor(
 		return nil, err
 	}
 	return processorhelper.NewMetricsProcessor(
+		cfg,
+		nextConsumer,
+		fp,
+		processorhelper.WithCapabilities(processorCapabilities))
+}
+
+func createTracesProcessor(
+	_ context.Context,
+	params component.ProcessorCreateParams,
+	cfg configmodels.Processor,
+	nextConsumer consumer.TracesConsumer,
+) (component.TracesProcessor, error) {
+	fp, err := newFilterSpanProcessor(params.Logger, cfg.(*Config))
+	if err != nil {
+		return nil, err
+	}
+	return processorhelper.NewTraceProcessor(
 		cfg,
 		nextConsumer,
 		fp,

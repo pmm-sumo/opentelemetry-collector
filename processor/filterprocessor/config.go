@@ -16,6 +16,7 @@ package filterprocessor
 
 import (
 	"go.opentelemetry.io/collector/config/configmodels"
+	"go.opentelemetry.io/collector/internal/processor/filterconfig"
 	"go.opentelemetry.io/collector/internal/processor/filtermetric"
 )
 
@@ -23,6 +24,20 @@ import (
 type Config struct {
 	configmodels.ProcessorSettings `mapstructure:",squash"`
 	Metrics                        MetricFilters `mapstructure:"metrics"`
+	Spans                          SpanFilters   `mapstructure:"spans"`
+}
+
+// SpanFilters filters by Span properties
+type SpanFilters struct {
+	// Include match properties describe spans that should be included in the Collector Service pipeline,
+	// all other spans should be dropped from further processing.
+	// If both Include and Exclude are specified, Include filtering occurs first.
+	Include *filterconfig.MatchProperties `mapstructure:"include"`
+
+	// Exclude match properties describe spans that should be excluded from the Collector Service pipeline,
+	// all other spans should be included.
+	// If both Include and Exclude are specified, Include filtering occurs first.
+	Exclude *filterconfig.MatchProperties `mapstructure:"exclude"`
 }
 
 // MetricFilter filters by Metric properties.
