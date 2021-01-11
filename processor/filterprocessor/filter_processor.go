@@ -24,26 +24,28 @@ import (
 	"go.opentelemetry.io/collector/internal/processor/filtermatcher"
 	"go.opentelemetry.io/collector/internal/processor/filtermetric"
 	"go.opentelemetry.io/collector/internal/processor/filterset"
+	"go.opentelemetry.io/collector/internal/processor/filterspan"
 	"go.opentelemetry.io/collector/processor/processorhelper"
 )
 
-type filterMetricProcessor struct {
+type filterProcessor struct {
 	cfg              *Config
-	include          filtermetric.Matcher
+	includeMetrics   filtermetric.Matcher
+	excludeMetrics   filtermetric.Matcher
 	includeAttribute filtermatcher.AttributesMatcher
-	exclude          filtermetric.Matcher
 	excludeAttribute filtermatcher.AttributesMatcher
+	includeSpans     filterspan.Matcher
+	excludeSpans     filterspan.Matcher
 	logger           *zap.Logger
 }
 
-func newFilterMetricProcessor(logger *zap.Logger, cfg *Config) (*filterMetricProcessor, error) {
-
-	inc, includeAttr, err := createMatcher(cfg.Metrics.Include)
+func newFilterMetricProcessor(logger *zap.Logger, cfg *Config) (*filterProcessor, error) {
+	inc, includeAttr, err := createMetricsMatcher(cfg.Metrics.Include)
 	if err != nil {
 		return nil, err
 	}
 
-	exc, excludeAttr, err := createMatcher(cfg.Metrics.Exclude)
+	exc, excludeAttr, err := createMetricsMatcher(cfg.Metrics.Exclude)
 	if err != nil {
 		return nil, err
 	}
@@ -82,17 +84,71 @@ func newFilterMetricProcessor(logger *zap.Logger, cfg *Config) (*filterMetricPro
 		zap.Any("exclude metrics with resource attributes", excludeResourceAttributes),
 	)
 
-	return &filterMetricProcessor{
+	return &filterProcessor{
 		cfg:              cfg,
-		include:          inc,
+		includeMetrics:   inc,
+		excludeMetrics:   exc,
 		includeAttribute: includeAttr,
-		exclude:          exc,
 		excludeAttribute: excludeAttr,
 		logger:           logger,
 	}, nil
 }
 
-func createMatcher(mp *filtermetric.MatchProperties) (filtermetric.Matcher, filtermatcher.AttributesMatcher, error) {
+func newFilterSpanProcessor(logger *zap.Logger, cfg *Config) (*filterProcessor, error) {
+	inc, err := createSpansMatcher(cfg.Spans.Include)
+	if err != nil {
+		return nil, err
+	}
+
+	exc, err := createSpansMatcher(cfg.Spans.Exclude)
+	if err != nil {
+		return nil, err
+	}
+
+	includeMatchType := ""
+	var includeServices []string
+	var includeSpanNames []string
+	if cfg.Spans.Include != nil {
+		includeMatchType = string(cfg.Spans.Include.MatchType)
+		includeServices = cfg.Spans.Include.Services
+		includeSpanNames = cfg.Spans.Include.SpanNames
+	}
+
+	excludeMatchType := ""
+	var excludeServices []string
+	var excludeSpanNames []string
+	if cfg.Spans.Exclude != nil {
+		excludeMatchType = string(cfg.Spans.Exclude.MatchType)
+		excludeServices = cfg.Spans.Exclude.Services
+		excludeSpanNames = cfg.Spans.Exclude.SpanNames
+	}
+
+	logger.Info(
+		"Span filter configured",
+		zap.String("includeSpans match_type", includeMatchType),
+		zap.Strings("includeSpans services", includeServices),
+		zap.Strings("includeSpans span names", includeSpanNames),
+		zap.String("excludeSpans match_type", excludeMatchType),
+		zap.Strings("excludeSpans services", excludeServices),
+		zap.Strings("excludeSpans span names", excludeSpanNames),
+	)
+
+	return &filterProcessor{
+		cfg:          cfg,
+		includeSpans: inc,
+		excludeSpans: exc,
+		logger:       logger,
+	}, nil
+}
+
+func createSpansMatcher(mp *filterconfig.MatchProperties) (filterspan.Matcher, error) {
+	if mp == nil {
+		return nil, nil
+	}
+	return filterspan.NewMatcher(mp)
+}
+
+func createMetricsMatcher(mp *filtermetric.MatchProperties) (filtermetric.Matcher, filtermatcher.AttributesMatcher, error) {
 	// Nothing specified in configuration
 	if mp == nil {
 		return nil, nil, nil
@@ -113,8 +169,8 @@ func createMatcher(mp *filtermetric.MatchProperties) (filtermetric.Matcher, filt
 	return nameMatcher, attributeMatcher, err
 }
 
-// ProcessMetrics filters the given metrics based off the filterMetricProcessor's filters.
-func (fmp *filterMetricProcessor) ProcessMetrics(_ context.Context, pdm pdata.Metrics) (pdata.Metrics, error) {
+// ProcessMetrics filters the given metrics based off the filterProcessor's filters.
+func (fmp *filterProcessor) ProcessMetrics(_ context.Context, pdm pdata.Metrics) (pdata.Metrics, error) {
 	rms := pdm.ResourceMetrics()
 	idx := newMetricIndex()
 	for i := 0; i < rms.Len(); i++ {
@@ -146,9 +202,34 @@ func (fmp *filterMetricProcessor) ProcessMetrics(_ context.Context, pdm pdata.Me
 	return idx.extract(pdm), nil
 }
 
-func (fmp *filterMetricProcessor) shouldKeepMetric(metric pdata.Metric) (bool, error) {
-	if fmp.include != nil {
-		matches, err := fmp.include.MatchMetric(metric)
+// ProcessTraces filters the given spans based off the filterProcessor's filters.
+func (fmp *filterProcessor) ProcessTraces(_ context.Context, pdt pdata.Traces) (pdata.Traces, error) {
+	rs := pdt.ResourceSpans()
+	for i := 0; i < rs.Len(); i++ {
+		rss := rs.At(i)
+		resource := rss.Resource()
+		ils := rss.InstrumentationLibrarySpans()
+
+		for j := 0; j < ils.Len(); j++ {
+			ilss := ils.At(j)
+			library := ilss.InstrumentationLibrary()
+			inputSpans := pdata.NewSpanSlice()
+			ilss.Spans().MoveAndAppendTo(inputSpans)
+			for k := 0; k < inputSpans.Len(); k++ {
+				span := inputSpans.At(k)
+				if fmp.shouldKeepSpan(span, resource, library) {
+					ilss.Spans().Append(span)
+				}
+			}
+		}
+	}
+
+	return pdt, nil
+}
+
+func (fmp *filterProcessor) shouldKeepMetric(metric pdata.Metric) (bool, error) {
+	if fmp.includeMetrics != nil {
+		matches, err := fmp.includeMetrics.MatchMetric(metric)
 		if err != nil {
 			// default to keep if there's an error
 			return true, err
@@ -158,8 +239,8 @@ func (fmp *filterMetricProcessor) shouldKeepMetric(metric pdata.Metric) (bool, e
 		}
 	}
 
-	if fmp.exclude != nil {
-		matches, err := fmp.exclude.MatchMetric(metric)
+	if fmp.excludeMetrics != nil {
+		matches, err := fmp.excludeMetrics.MatchMetric(metric)
 		if err != nil {
 			return true, err
 		}
@@ -171,18 +252,36 @@ func (fmp *filterMetricProcessor) shouldKeepMetric(metric pdata.Metric) (bool, e
 	return true, nil
 }
 
-func (fmp *filterMetricProcessor) shouldKeepMetricsForResource(resource pdata.Resource) bool {
+func (fmp *filterProcessor) shouldKeepMetricsForResource(resource pdata.Resource) bool {
 	resourceAttributes := resource.Attributes()
 
-	if fmp.include != nil && fmp.includeAttribute != nil {
+	if fmp.includeMetrics != nil && fmp.includeAttribute != nil {
 		matches := fmp.includeAttribute.Match(resourceAttributes)
 		if !matches {
 			return false
 		}
 	}
 
-	if fmp.exclude != nil && fmp.excludeAttribute != nil {
+	if fmp.excludeMetrics != nil && fmp.excludeAttribute != nil {
 		matches := fmp.excludeAttribute.Match(resourceAttributes)
+		if matches {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (fmp *filterProcessor) shouldKeepSpan(span pdata.Span, resource pdata.Resource, library pdata.InstrumentationLibrary) bool {
+	if fmp.includeSpans != nil {
+		matches := fmp.includeSpans.MatchSpan(span, resource, library)
+		if !matches {
+			return false
+		}
+	}
+
+	if fmp.excludeSpans != nil {
+		matches := fmp.excludeSpans.MatchSpan(span, resource, library)
 		if matches {
 			return false
 		}

@@ -1,0 +1,32 @@
+receivers:
+  examplereceiver:
+
+processors:
+  filter/spans:
+    # any names NOT matching filters are excluded from remainder of pipeline
+    spans:
+      include:
+        match_type: regexp
+        span_names:
+          # re2 regexp patterns
+          - prefix/.*
+          - .*/suffix
+      exclude:
+        match_type: regexp
+        span_names:
+          - other_prefix/.*
+          - .*/other_suffix
+
+exporters:
+  exampleexporter:
+
+service:
+  pipelines:
+    traces:
+      receivers: [examplereceiver]
+      processors: [filter/spans]
+      exporters: [exampleexporter]
+    metrics:
+      receivers: [examplereceiver]
+      processors: [filter/spans]
+      exporters: [exampleexporter]

@@ -35,6 +35,7 @@ import (
 	"go.opentelemetry.io/collector/internal/goldendataset"
 	"go.opentelemetry.io/collector/internal/processor/filterconfig"
 	"go.opentelemetry.io/collector/internal/processor/filtermetric"
+	"go.opentelemetry.io/collector/internal/processor/filterset"
 	"go.opentelemetry.io/collector/translator/internaldata"
 )
 
@@ -153,13 +154,13 @@ var (
 			outMN: [][]string{{
 				"full_name_match",
 				"prefix/test/match",
-				// "prefix_test_match", excluded by exclude filter
+				// "prefix_test_match", excluded by excludeMetrics filter
 				"prefixprefix/test/match",
 				"test/match/suffix",
 				"test_match_suffix",
 				"test/match/suffixsuffix",
 				"test/contains/match",
-				// "test_contains_match", excluded by exclude filter
+				// "test_contains_match", excluded by excludeMetrics filter
 				"full/name/match",
 				"full_name_match",
 			}},
@@ -179,13 +180,13 @@ var (
 				{
 					"full_name_match",
 					"prefix/test/match",
-					// "prefix_test_match", excluded by exclude filter
+					// "prefix_test_match", excluded by excludeMetrics filter
 					"prefixprefix/test/match",
 					"test/match/suffix",
 					"test_match_suffix",
 					"test/match/suffixsuffix",
 					"test/contains/match",
-					// "test_contains_match", excluded by exclude filter
+					// "test_contains_match", excluded by excludeMetrics filter
 					"full/name/match",
 					"full_name_match",
 				},
@@ -300,6 +301,105 @@ var (
 		},
 	}
 )
+
+func TestFilterSpanProcessor(t *testing.T) {
+	factory := NewFactory()
+
+	includeFilter := &filterconfig.MatchProperties{
+		Config:    filterset.Config{MatchType: "regexp"},
+		SpanNames: []string{"^get prefix/.*", "^.*/suffix$"},
+	}
+
+	excludeFilter := &filterconfig.MatchProperties{
+		Config:    filterset.Config{MatchType: "regexp"},
+		SpanNames: []string{"^other_prefix/.*$", "^.*/other_suffix$"},
+	}
+
+	spanTests := []struct {
+		name              string
+		include           *filterconfig.MatchProperties
+		exclude           *filterconfig.MatchProperties
+		expectedSpanNames []string
+	}{
+		{
+			name:              "no filters",
+			include:           nil,
+			exclude:           nil,
+			expectedSpanNames: []string{"get prefix/foo", "other_prefix/foo", "bar"},
+		},
+		{
+			name:              "only include",
+			include:           includeFilter,
+			exclude:           nil,
+			expectedSpanNames: []string{"get prefix/foo"},
+		},
+		{
+			name:              "only exclude",
+			include:           nil,
+			exclude:           excludeFilter,
+			expectedSpanNames: []string{"get prefix/foo", "bar"},
+		},
+		{
+			name:              "include and exclude",
+			include:           includeFilter,
+			exclude:           excludeFilter,
+			expectedSpanNames: []string{"get prefix/foo"},
+		},
+	}
+
+	for _, test := range spanTests {
+		t.Run(test.name, func(t *testing.T) {
+			input := createTraces([]string{"get prefix/foo", "other_prefix/foo", "bar"})
+
+			cfg := &Config{
+				ProcessorSettings: configmodels.ProcessorSettings{
+					TypeVal: typeStr,
+					NameVal: typeStr,
+				},
+				Spans: SpanFilters{
+					Include: test.include,
+					Exclude: test.exclude,
+				},
+			}
+
+			next := new(consumertest.TracesSink)
+			fmp, err := factory.CreateTracesProcessor(
+				context.Background(),
+				component.ProcessorCreateParams{
+					Logger: zap.NewNop(),
+				},
+				cfg,
+				next,
+			)
+			assert.NotNil(t, fmp)
+			assert.Nil(t, err)
+
+			assert.NoError(t, fmp.Start(context.Background(), nil))
+
+			tErr := fmp.ConsumeTraces(context.Background(), input)
+			assert.NoError(t, tErr)
+			got := next.AllTraces()
+			assert.EqualValues(t, 1, len(got))
+			assert.EqualValues(t, createTraces(test.expectedSpanNames), got[0])
+		})
+	}
+}
+
+func createTraces(names []string) pdata.Traces {
+	ils := pdata.NewInstrumentationLibrarySpans()
+
+	for _, name := range names {
+		span := pdata.NewSpan()
+		span.SetName(name)
+		ils.Spans().Append(span)
+	}
+
+	rs := pdata.NewResourceSpans()
+	rs.InstrumentationLibrarySpans().Append(ils)
+	td := pdata.NewTraces()
+	td.ResourceSpans().Append(rs)
+	return td
+}
 
 func TestFilterMetricProcessor(t *testing.T) {
 	for _, test := range standardTests {

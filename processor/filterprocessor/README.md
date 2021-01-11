@@ -1,29 +1,34 @@
 # Filter Processor
 
-Supported pipeline types: metrics
+Supported pipeline types: traces, metrics
 
 The filter processor can be configured to include or exclude metrics based on
 metric name in the case of the 'strict' or 'regexp' match types, or based on other
 metric attributes in the case of the 'expr' match type. Please refer to
 [config.go](./config.go) for the config spec.
 
-It takes a pipeline type, of which only `metrics` is supported, followed by an
-action:
+It takes a pipeline type, of which only `metrics` and `spans` is supported, where following actions are available:
 - `include`: Any names NOT matching filters are excluded from remainder of pipeline
 - `exclude`: Any names matching filters are excluded from remainder of pipeline
 
-For the actions the following parameters are required:
+For the `metrics` actions the following parameters are required:
  - `match_type`: strict|regexp|expr
  - `metric_names`: (only for a `match_type` of 'strict' or 'regexp') list of strings or re2 regex patterns
  - `expressions`: (only for a `match_type` of 'expr') list of expr expressions (see "Using an 'expr' match_type" below)
  - `resource_attributes`: ResourceAttributes defines a list of possible resource attributes to match metrics against. A match occurs if any resource attribute matches at least one expression in this given list. 
 
-More details can found at [include/exclude metrics](../README.md#includeexclude-metrics).
+For `spans`, following parameters are available:
+ - `match_type`: strict|regexp|expr
+ - `services`: list of strings for matching service names
+ - `span_names`: list of strings for matching span names
+ - `attributes`: list of attributes to match against
+
+More details can found at [include/exclude](../README.md#includeexclude-metrics).
 
 Examples:
 
 ```yaml
-processors:
+processors:  
   filter/1:
     metrics:
       include:
@@ -39,6 +44,19 @@ processors:
         metric_names:
           - hello_world
           - hello/world
+  filter/2:
+    spans:
+      include:
+        match_type: regexp
+        span_names:
+          # re2 regexp patterns
+          - ^prefix/.*
+          - .*/suffix
+      exclude:
+        match_type: regexp
+        span_names:
+          - ^other_prefix/.*
+          - .*/other_suffix
 ```
 
 Refer to the config files in [testdata](./testdata) for detailed
