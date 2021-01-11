@@ -4,6 +4,12 @@ receivers:
 processors:
     filter/include:
         # any names NOT matching filters are excluded from remainder of pipeline
+        spans:
+            include:
+                match_type: regexp
+                span_names:
+                    # re2 regexp patterns
+                    - (\W|^)stock\stips(\W|$
         metrics:
             include:
                 match_type: regexp
