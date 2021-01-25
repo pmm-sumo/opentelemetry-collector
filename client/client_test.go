@@ -21,6 +21,7 @@ import (
 	"net"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/peer"
@@ -31,7 +32,7 @@ func TestClientContext(t *testing.T) {
 		"1.1.1.1", "127.0.0.1", "1111", "ip",
 	}
 	for _, ip := range ips {
-		ctx := NewContext(context.Background(), &Client{ip, ""})
+		ctx := NewContext(context.Background(), &Client{ip, "", time.Now()})
 		c, ok := FromContext(ctx)
 		assert.True(t, ok)
 		assert.NotNil(t, c)
