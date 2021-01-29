@@ -169,13 +169,13 @@ func (bp *batchProcessor) startProcessingCycle() {
 
 func (bp *batchProcessor) processItemIfTokenUnchanged(itemAndContext itemWithContext, currentToken string, currentContext context.Context) (string, context.Context) {
 	newToken := getTokenFromContext(itemAndContext.ctx)
-	if currentToken != newToken {
+	if currentToken != newToken && currentToken != "" {
 		bp.timer.Stop()
 		bp.sendItems(currentContext, statBatchSizeTriggerSend)
 		bp.resetTimer()
-		currentToken = newToken
-		currentContext = itemAndContext.ctx
 	}
+	currentToken = newToken
+	currentContext = itemAndContext.ctx
 	bp.processItem(itemAndContext)
 	return currentToken, currentContext
 }
