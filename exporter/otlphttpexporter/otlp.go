@@ -84,9 +84,9 @@ func (e *exporterImp) pushTraceData(ctx context.Context, traces pdata.Traces) (i
 	}
 
 	if strings.Contains(e.tracesURL, TokenPlaceholder) {
-		var c, ok = client.FromContext(ctx)
+		c, ok := client.FromContext(ctx)
 		if ok {
-			var urlWithToken = strings.Replace(e.tracesURL, TokenPlaceholder, c.Token, 1)
+			urlWithToken := strings.Replace(e.tracesURL, TokenPlaceholder, c.Token, 1)
 			err = e.export(ctx, urlWithToken, request)
 		} else {
 			err = errors.New("error during fetching client from context")

@@ -20,13 +20,12 @@ import (
 	"testing"
 	"time"
 
-	"go.opentelemetry.io/collector/client"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opencensus.io/stats/view"
 	"go.uber.org/zap"
 
+	"go.opentelemetry.io/collector/client"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/component/componenttest"
 	"go.opentelemetry.io/collector/config/configtelemetry"

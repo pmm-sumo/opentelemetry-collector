@@ -50,14 +50,6 @@ func FromContext(ctx context.Context) (*Client, bool) {
 	return c, ok
 }
 
-func tokenFromURI(uri string) string {
-	res := TokenRegex.FindAllStringSubmatch(uri, -1)
-	if len(res) == 1 && len(res[0]) == 2 {
-		return res[0][1]
-	}
-	return ""
-}
-
 // FromGRPC takes a GRPC context and tries to extract client information from it
 func FromGRPC(ctx context.Context) (*Client, bool) {
 	ip := ""
@@ -67,7 +59,7 @@ func FromGRPC(ctx context.Context) (*Client, bool) {
 	}
 	if m, ok := metadata.FromIncomingContext(ctx); ok {
 		vals := m.Get(AuthTokenHeader)
-		if vals != nil && len(vals) > 0 {
+		if vals != nil {
 			token = vals[0]
 		}
 	}
@@ -94,6 +86,14 @@ func parseIP(source string) string {
 	ip := net.ParseIP(source)
 	if ip != nil {
 		return ip.String()
+	}
+	return ""
+}
+
+func tokenFromURI(uri string) string {
+	res := TokenRegex.FindAllStringSubmatch(uri, -1)
+	if len(res) == 1 && len(res[0]) == 2 {
+		return res[0][1]
 	}
 	return ""
 }

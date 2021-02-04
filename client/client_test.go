@@ -55,14 +55,14 @@ func TestParsingGRPC(t *testing.T) {
 }
 
 func TestParsingHTTP(t *testing.T) {
-	var h = http.Header{}
+	h := http.Header{}
 	h.Set(AuthTokenHeader, "abc")
 
 	client, ok := FromHTTP(&http.Request{RemoteAddr: "192.168.1.2", Header: h})
 	assert.True(t, ok)
 	assert.NotNil(t, client)
-	assert.Equal(t,"abc", client.Token)
-	assert.Equal(t,"192.168.1.2", client.IP)
+	assert.Equal(t, "abc", client.Token)
+	assert.Equal(t, "192.168.1.2", client.IP)
 }
 
 func TestExtractingFromURI(t *testing.T) {

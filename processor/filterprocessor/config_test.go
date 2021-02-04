@@ -18,16 +18,15 @@ import (
 	"path"
 	"testing"
 
-	"go.opentelemetry.io/collector/internal/processor/filterconfig"
-	"go.opentelemetry.io/collector/internal/processor/filterset"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"go.opentelemetry.io/collector/component/componenttest"
 	"go.opentelemetry.io/collector/config/configmodels"
 	"go.opentelemetry.io/collector/config/configtest"
+	"go.opentelemetry.io/collector/internal/processor/filterconfig"
 	"go.opentelemetry.io/collector/internal/processor/filtermetric"
+	"go.opentelemetry.io/collector/internal/processor/filterset"
 	fsregexp "go.opentelemetry.io/collector/internal/processor/filterset/regexp"
 )
 

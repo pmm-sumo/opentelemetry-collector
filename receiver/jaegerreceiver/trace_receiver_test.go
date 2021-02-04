@@ -119,7 +119,8 @@ func TestClientIPDetection(t *testing.T) {
 	case ctx := <-ch:
 		gotClient, ok := client.FromContext(ctx)
 		assert.True(t, ok, "must get client back from context")
-		assert.Equal(t, wantClient, gotClient)
+		assert.Equal(t, wantClient.IP, gotClient.IP)
+		assert.Equal(t, wantClient.Token, gotClient.Token)
 		break
 	case <-time.After(time.Second * 2):
 		t.Error("next consumer did not receive the batch")

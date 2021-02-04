@@ -19,13 +19,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"go.opentelemetry.io/collector/client"
 	"net/http"
 	"strings"
 
 	"github.com/openzipkin/zipkin-go/proto/zipkin_proto3"
 	zipkinreporter "github.com/openzipkin/zipkin-go/reporter"
 
+	"go.opentelemetry.io/collector/client"
 	"go.opentelemetry.io/collector/consumer/consumererror"
 	"go.opentelemetry.io/collector/consumer/pdata"
 	"go.opentelemetry.io/collector/translator/trace/zipkin"
@@ -83,7 +83,7 @@ func (ze *zipkinExporter) pushTraceData(ctx context.Context, td pdata.Traces) (i
 
 	url := ze.url
 	if strings.Contains(ze.url, TokenPlaceholder) {
-		var c, ok = client.FromContext(ctx)
+		c, ok := client.FromContext(ctx)
 		if ok {
 			url = strings.Replace(ze.url, TokenPlaceholder, c.Token, 1)
 		} else {

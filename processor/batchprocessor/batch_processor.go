@@ -122,9 +122,8 @@ func getTokenFromContext(ctx context.Context) string {
 	c, ok := client.FromContext(ctx)
 	if ok {
 		return c.Token
-	} else {
-		return ""
 	}
+	return ""
 }
 
 func (bp *batchProcessor) startProcessingCycle() {
@@ -139,7 +138,7 @@ func (bp *batchProcessor) startProcessingCycle() {
 				select {
 				case itemAndCtxFromChannel := <-bp.newItem:
 					itemAndContext := itemAndCtxFromChannel.(itemWithContext)
-					currentToken, currentContext = bp.processItemIfTokenUnchanged(itemAndContext, currentToken, currentContext)
+					currentToken, currentContext = bp.processItemIfTokenUnchanged(currentContext, itemAndContext, currentToken)
 				default:
 					break DONE
 				}
@@ -157,7 +156,7 @@ func (bp *batchProcessor) startProcessingCycle() {
 			if itemAndContext.item == nil {
 				continue
 			}
-			currentToken, currentContext = bp.processItemIfTokenUnchanged(itemAndContext, currentToken, currentContext)
+			currentToken, currentContext = bp.processItemIfTokenUnchanged(currentContext, itemAndContext, currentToken)
 		case <-bp.timer.C:
 			if bp.batch.itemCount() > 0 {
 				bp.sendItems(currentContext, statTimeoutTriggerSend)
@@ -167,7 +166,7 @@ func (bp *batchProcessor) startProcessingCycle() {
 	}
 }
 
-func (bp *batchProcessor) processItemIfTokenUnchanged(itemAndContext itemWithContext, currentToken string, currentContext context.Context) (string, context.Context) {
+func (bp *batchProcessor) processItemIfTokenUnchanged(currentContext context.Context, itemAndContext itemWithContext, currentToken string) (string, context.Context) {
 	newToken := getTokenFromContext(itemAndContext.ctx)
 	if currentToken != newToken && currentToken != "" {
 		bp.timer.Stop()
