@@ -28,7 +28,7 @@ import (
 
 type ctxKey struct{}
 
-const AuthTokenHeader = "Auth-Token"
+const AuthTokenHeader = "Authorization"
 
 var TokenRegex = *regexp.MustCompile(`/([^/]{120,})$`)
 
