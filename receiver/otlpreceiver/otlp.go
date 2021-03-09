@@ -17,6 +17,7 @@ package otlpreceiver
 import (
 	"context"
 	"errors"
+	"google.golang.org/grpc/metadata"
 	"net"
 	"net/http"
 	"sync"
@@ -80,6 +81,13 @@ func newOtlpReceiver(cfg *Config, logger *zap.Logger) (*otlpReceiver, error) {
 			OrigName:     true,
 		}
 		r.gatewayMux = gatewayruntime.NewServeMux(
+			gatewayruntime.WithMetadata(func(ctx context.Context, req *http.Request) metadata.MD {
+				auth := req.URL.Query().Get("auth")
+				if auth != "" {
+					return metadata.New(map[string]string{"authorization": auth})
+				}
+				return metadata.New(map[string]string{})
+			}),
 			gatewayruntime.WithProtoErrorHandler(gatewayruntime.DefaultHTTPProtoErrorHandler),
 			gatewayruntime.WithMarshalerOption("application/x-protobuf", &xProtobufMarshaler{}),
 			gatewayruntime.WithMarshalerOption(gatewayruntime.MIMEWildcard, jsonpb),
