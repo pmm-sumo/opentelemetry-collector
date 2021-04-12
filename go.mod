@@ -40,7 +40,7 @@ require (
 	github.com/prometheus/prometheus v1.8.2-0.20201105135750-00f16d1ac3a4
 	github.com/rs/cors v1.7.0
 	github.com/shirou/gopsutil v3.20.12-0.20201210134652-afe0c04c5d5a+incompatible
-	github.com/soheilhy/cmux v0.1.4
+	github.com/soheilhy/cmux v0.1.5
 	github.com/spf13/cast v1.3.1
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
@@ -55,7 +55,6 @@ require (
 	golang.org/x/text v0.3.5
 	google.golang.org/genproto v0.0.0-20200904004341-0bd0a958aa1d
 	google.golang.org/grpc v1.35.0
-	google.golang.org/grpc/examples v0.0.0-20200728065043-dfc0c05b2da9 // indirect
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/ini.v1 v1.57.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
