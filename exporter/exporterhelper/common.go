@@ -50,7 +50,10 @@ type request interface {
 	onError(error) request
 	// Returns the count of spans/metric points or log records.
 	count() int
+	marshall() ([]byte, error)
 }
+
+type requestUnmarshaller func([]byte) (request, error)
 
 // requestSender is an abstraction of a sender for a request independent of the type of the data (traces, metrics, logs).
 type requestSender interface {
@@ -158,7 +161,7 @@ type baseExporter struct {
 	convertResourceToTelemetry bool
 }
 
-func newBaseExporter(cfg config.Exporter, logger *zap.Logger, options ...Option) *baseExporter {
+func newBaseExporter(cfg config.Exporter, logger *zap.Logger, reqUnnmarshaller requestUnmarshaller, options ...Option) *baseExporter {
 	bs := fromOptions(options)
 	be := &baseExporter{
 		Component:                  componenthelper.New(bs.componentOptions...),
@@ -166,7 +169,7 @@ func newBaseExporter(cfg config.Exporter, logger *zap.Logger, options ...Option)
 		convertResourceToTelemetry: bs.ResourceToTelemetrySettings.Enabled,
 	}
 
-	be.qrSender = newQueuedRetrySender(cfg.ID().String(), bs.QueueSettings, bs.RetrySettings, &timeoutSender{cfg: bs.TimeoutSettings}, logger)
+	be.qrSender = newQueuedRetrySender(cfg.ID().String(), bs.QueueSettings, bs.RetrySettings, reqUnnmarshaller, &timeoutSender{cfg: bs.TimeoutSettings}, logger)
 	be.sender = be.qrSender
 
 	return be

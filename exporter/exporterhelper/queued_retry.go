@@ -18,10 +18,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/jaegertracing/jaeger/pkg/queue"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
-	"github.com/jaegertracing/jaeger/pkg/queue"
 	"go.opencensus.io/metric"
 	"go.opencensus.io/metric/metricdata"
 	"go.opencensus.io/metric/metricproducer"
@@ -99,7 +99,7 @@ type queuedRetrySender struct {
 	fullName        string
 	cfg             QueueSettings
 	consumerSender  requestSender
-	queue           *queue.BoundedQueue
+	queue           consumersQueue
 	retryStopCh     chan struct{}
 	traceAttributes []trace.Attribute
 	logger          *zap.Logger
@@ -124,21 +124,49 @@ func createSampledLogger(logger *zap.Logger) *zap.Logger {
 	return logger.WithOptions(opts)
 }
 
-func newQueuedRetrySender(fullName string, qCfg QueueSettings, rCfg RetrySettings, nextSender requestSender, logger *zap.Logger) *queuedRetrySender {
+func newQueuedRetrySender(fullName string, qCfg QueueSettings, rCfg RetrySettings, reqUnmarshaller requestUnmarshaller, nextSender requestSender, logger *zap.Logger) *queuedRetrySender {
 	retryStopCh := make(chan struct{})
 	sampledLogger := createSampledLogger(logger)
 	traceAttr := trace.StringAttribute(obsreport.ExporterKey, fullName)
+
+	//walEnabled := true
+	walEnabled := false
+	var _queue consumersQueue
+	var onTemporaryFailure requestTemporaryFailureFunc
+	if walEnabled {
+		_queue = newWalQueue(reqUnmarshaller)
+		onTemporaryFailure = func(req request, err error) error {
+			_queue.Produce(req)
+			sampledLogger.Error(
+				"Exporting failed. Putting back to the end of the queue.",
+				zap.Error(err),
+			)
+			return err
+		}
+	} else {
+		_queue = queue.NewBoundedQueue(qCfg.QueueSize, func(item interface{}) {})
+		onTemporaryFailure = func(req request, err error) error {
+			sampledLogger.Error(
+				"Exporting failed. No more retries left. Dropping data.",
+				zap.Error(err),
+				zap.Int("dropped_items", req.count()),
+			)
+			return err
+		}
+	}
+
 	return &queuedRetrySender{
 		fullName: fullName,
 		cfg:      qCfg,
 		consumerSender: &retrySender{
-			traceAttribute: traceAttr,
-			cfg:            rCfg,
-			nextSender:     nextSender,
-			stopCh:         retryStopCh,
-			logger:         sampledLogger,
+			traceAttribute:     traceAttr,
+			cfg:                rCfg,
+			nextSender:         nextSender,
+			stopCh:             retryStopCh,
+			logger:             sampledLogger,
+			onTemporaryFailure: onTemporaryFailure,
 		},
-		queue:           queue.NewBoundedQueue(qCfg.QueueSize, func(item interface{}) {}),
+		queue:           _queue,
 		retryStopCh:     retryStopCh,
 		traceAttributes: []trace.Attribute{traceAttr},
 		logger:          sampledLogger,
@@ -228,11 +256,12 @@ func NewThrottleRetry(err error, delay time.Duration) error {
 }
 
 type retrySender struct {
-	traceAttribute trace.Attribute
-	cfg            RetrySettings
-	nextSender     requestSender
-	stopCh         chan struct{}
-	logger         *zap.Logger
+	traceAttribute     trace.Attribute
+	cfg                RetrySettings
+	nextSender         requestSender
+	stopCh             chan struct{}
+	logger             *zap.Logger
+	onTemporaryFailure requestTemporaryFailureFunc
 }
 
 // send implements the requestSender interface
@@ -292,12 +321,7 @@ func (rs *retrySender) send(req request) error {
 		if backoffDelay == backoff.Stop {
 			// throw away the batch
 			err = fmt.Errorf("max elapsed time expired %w", err)
-			rs.logger.Error(
-				"Exporting failed. No more retries left. Dropping data.",
-				zap.Error(err),
-				zap.Int("dropped_items", req.count()),
-			)
-			return err
+			return rs.onTemporaryFailure(req, err)
 		}
 
 		if throttleErr, isThrottle := err.(*throttleRetry); isThrottle {

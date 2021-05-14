@@ -16,6 +16,8 @@ package exporterhelper
 import (
 	"context"
 	"errors"
+	"go.opentelemetry.io/collector/consumer/consumerhelper"
+	"go.opentelemetry.io/collector/consumer/pdata"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -44,7 +46,7 @@ func TestErrorToStatus(t *testing.T) {
 }
 
 func TestBaseExporter(t *testing.T) {
-	be := newBaseExporter(&defaultExporterCfg, zap.NewNop())
+	be := newBaseExporter(&defaultExporterCfg, zap.NewNop(), nopRequestUnmarshaller())
 	require.NoError(t, be.Start(context.Background(), componenttest.NewNopHost()))
 	require.NoError(t, be.Shutdown(context.Background()))
 }
@@ -54,6 +56,7 @@ func TestBaseExporterWithOptions(t *testing.T) {
 	be := newBaseExporter(
 		&defaultExporterCfg,
 		zap.NewNop(),
+		nopRequestUnmarshaller(),
 		WithStart(func(ctx context.Context, host component.Host) error { return want }),
 		WithShutdown(func(ctx context.Context) error { return want }),
 		WithResourceToTelemetryConversion(defaultResourceToTelemetrySettings()),
@@ -68,4 +71,15 @@ func errToStatus(err error) trace.Status {
 		return trace.Status{Code: trace.StatusCodeUnknown, Message: err.Error()}
 	}
 	return okStatus
+}
+
+
+func nopTracePusher() consumerhelper.ConsumeTracesFunc {
+	return func(ctx context.Context, ld pdata.Traces) error {
+		return nil
+	}
+}
+
+func nopRequestUnmarshaller() requestUnmarshaller {
+	return newTraceRequestUnmarshallerFunc(nopTracePusher())
 }

@@ -16,6 +16,7 @@ package exporterhelper
 
 import (
 	"context"
+	"go.opentelemetry.io/collector/client"
 
 	"go.uber.org/zap"
 
@@ -41,6 +42,28 @@ func newTracesRequest(ctx context.Context, td pdata.Traces, pusher consumerhelpe
 		td:          td,
 		pusher:      pusher,
 	}
+}
+
+func newTraceRequestUnmarshallerFunc(pusher consumerhelper.ConsumeTracesFunc) requestUnmarshaller {
+	return func(bytes []byte) (request, error) {
+		traces, err := pdata.TracesFromOtlpProtoBytes(bytes)
+		if err != nil {
+			return nil, err
+		}
+
+		// FIXME unmarshall context
+
+		return newTracesRequest(context.Background(), traces, pusher), nil
+	}
+}
+
+func (req *tracesRequest) marshall() ([]byte, error) {
+	// Unfortunately, this is perhaps the only type of context which might be safely checked against
+	c, ok := client.FromContext(req.context())
+	if ok {
+		print(c.IP)
+	}
+	return req.td.ToOtlpProtoBytes()
 }
 
 func (req *tracesRequest) onError(err error) request {
@@ -92,7 +115,7 @@ func NewTracesExporter(
 		return nil, errNilPushTraceData
 	}
 
-	be := newBaseExporter(cfg, logger, options...)
+	be := newBaseExporter(cfg, logger, newTraceRequestUnmarshallerFunc(pusher), options...)
 	be.wrapConsumerSender(func(nextSender requestSender) requestSender {
 		return &tracesExporterWithObservability{
 			obsrep: obsreport.NewExporter(

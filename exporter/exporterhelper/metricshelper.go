@@ -43,6 +43,19 @@ func newMetricsRequest(ctx context.Context, md pdata.Metrics, pusher consumerhel
 	}
 }
 
+func newMetricsRequestUnmarshallerFunc(pusher consumerhelper.ConsumeMetricsFunc) requestUnmarshaller {
+	return func(bytes []byte) (request, error) {
+		metrics, err := pdata.MetricsFromOtlpProtoBytes(bytes)
+		if err != nil {
+			return nil, err
+		}
+
+		// FIXME unmarshall context
+
+		return newMetricsRequest(context.Background(), metrics, pusher), nil
+	}
+}
+
 func (req *metricsRequest) onError(err error) request {
 	var metricsError consumererror.Metrics
 	if consumererror.AsMetrics(err, &metricsError) {
@@ -53,6 +66,10 @@ func (req *metricsRequest) onError(err error) request {
 
 func (req *metricsRequest) export(ctx context.Context) error {
 	return req.pusher(ctx, req.md)
+}
+
+func (req *metricsRequest) marshall() ([]byte, error) {
+	return req.md.ToOtlpProtoBytes()
 }
 
 func (req *metricsRequest) count() int {
@@ -95,7 +112,7 @@ func NewMetricsExporter(
 		return nil, errNilPushMetricsData
 	}
 
-	be := newBaseExporter(cfg, logger, options...)
+	be := newBaseExporter(cfg, logger, newMetricsRequestUnmarshallerFunc(pusher), options...)
 	be.wrapConsumerSender(func(nextSender requestSender) requestSender {
 		return &metricsSenderWithObservability{
 			obsrep: obsreport.NewExporter(obsreport.ExporterSettings{
