@@ -55,6 +55,10 @@ type QueueSettings struct {
 	NumConsumers int `mapstructure:"num_consumers"`
 	// QueueSize is the maximum number of batches allowed in queue at a given time.
 	QueueSize int `mapstructure:"queue_size"`
+	// WalDirectory describes where Write-Ahead-Log should be stored. If empty (default) no WAL used
+	WalDirectory string `mapstructure:"wal_directory"`
+	// WalSyncFrequency describes how frequently the WAL should be synced. If set to zero, it's synced after each operation
+	WalSyncFrequency time.Duration `mapstructure:"wal_sync_frequency"`
 }
 
 // DefaultQueueSettings returns the default settings for QueueSettings.
@@ -67,6 +71,8 @@ func DefaultQueueSettings() QueueSettings {
 		// User should calculate this from the perspective of how many seconds to buffer in case of a backend outage,
 		// multiply that by the number of requests per seconds.
 		QueueSize: 5000,
+		WalDirectory: "",
+		WalSyncFrequency: 0,
 	}
 }
 
@@ -124,17 +130,17 @@ func createSampledLogger(logger *zap.Logger) *zap.Logger {
 	return logger.WithOptions(opts)
 }
 
-func newQueuedRetrySender(fullName string, qCfg QueueSettings, rCfg RetrySettings, reqUnmarshaller requestUnmarshaller, nextSender requestSender, logger *zap.Logger) *queuedRetrySender {
+func newQueuedRetrySender(fullName string, qCfg QueueSettings, rCfg RetrySettings, reqUnmarshaler requestUnmarshaler, nextSender requestSender, logger *zap.Logger) *queuedRetrySender {
 	retryStopCh := make(chan struct{})
 	sampledLogger := createSampledLogger(logger)
 	traceAttr := trace.StringAttribute(obsreport.ExporterKey, fullName)
 
-	//walEnabled := true
-	walEnabled := false
+	walEnabled := qCfg.WalDirectory != ""
+
 	var _queue consumersQueue
 	var onTemporaryFailure requestTemporaryFailureFunc
 	if walEnabled {
-		_queue = newWalQueue(reqUnmarshaller)
+		_queue = newWalQueue(logger, qCfg.WalDirectory, qCfg.WalSyncFrequency, reqUnmarshaler)
 		onTemporaryFailure = func(req request, err error) error {
 			_queue.Produce(req)
 			sampledLogger.Error(

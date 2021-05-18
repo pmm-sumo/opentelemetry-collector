@@ -16,19 +16,135 @@ package exporterhelper
 
 import (
 	"context"
-	"fmt"
-	"github.com/nsqio/go-diskqueue"
 	"github.com/stretchr/testify/assert"
 	"go.opentelemetry.io/collector/consumer/pdata"
+	"go.uber.org/zap"
 	"io/ioutil"
 	"os"
 	"testing"
 	"time"
 )
 
-func TestWal_PutIntoQueue(t *testing.T) {
+func createTestQueue(path string) *WalQueue {
+	logger, _ := zap.NewDevelopment()
+
+	wq, err := createWalQueue(logger, path, 1000000*time.Millisecond, newTraceRequestUnmarshalerFunc(nopTracePusher()))
+	if err != nil {
+		panic(err)
+	}
+	return wq
+}
+
+func createTemporaryDirectory() string {
+	directory, err := ioutil.TempDir("", "wal-test")
+	if err != nil {
+		panic(err)
+	}
+	return directory
+}
+
+func TestWal_RepeatPutCloseReadClose(t *testing.T) {
+	path := createTemporaryDirectory()
+	defer os.RemoveAll(path)
+
+	traces := newTraces(1, 10)
+	req := newTracesRequest(context.Background(), traces, nopTracePusher())
+
+	// Unfortunately, due to design of TidWal, there must be always at least one element present...
+	// ... this will also break reading the last element from the list, DUH
+
+	for i := 0; i < 3; i++ {
+		wq := createTestQueue(path)
+		assert.Equal(t, 0, wq.Size())
+		err := wq.put(req)
+		assert.NoError(t, err)
+		err = wq.sync()
+		assert.NoError(t, err)
+		err = wq.close()
+		assert.NoError(t, err)
+
+		wq = createTestQueue(path)
+		assert.Equal(t, 1, wq.Size())
+		readReq, err := wq.get()
+		assert.NoError(t, err)
+		assert.Equal(t, 0, wq.Size())
+		assert.Equal(t, req.(*tracesRequest).td, readReq.(*tracesRequest).td)
+		err = wq.sync()
+		assert.NoError(t, err)
+		err = wq.close()
+		assert.NoError(t, err)
+	}
+
+	// No more items
+	wq := createTestQueue(path)
+	assert.Equal(t, 0, wq.Size())
+	readReq, err := wq.get()
+	assert.Nil(t, readReq)
+	assert.Error(t, err)
+	wq.close()
+}
+
+func TestWal_Consumers(t *testing.T) {
 
 }
+
+func BenchmarkWal_1Trace10Spans(b *testing.B) {
+	b.StopTimer()
+	path := createTemporaryDirectory()
+	wq := createTestQueue(path)
+	defer os.RemoveAll(path)
+
+	traces := newTraces(1, 10)
+	req := newTracesRequest(context.Background(), traces, nopTracePusher())
+	b.StartTimer()
+
+	for i := 0; i < b.N; i++ {
+		err := wq.put(req)
+		assert.NoError(b, err)
+	}
+
+	for i := 0; i < b.N; i++ {
+		req, err := wq.get()
+		assert.NoError(b, err)
+		assert.NotNil(b, req)
+	}
+
+	b.StopTimer()
+	wq.close()
+}
+
+//func BenchmarkDiskQueue_1Trace10Spans(b *testing.B) {
+//	b.StopTimer()
+//
+//	dqName := "test_disk_queue_roll"
+//	tmpDir, err := ioutil.TempDir("", fmt.Sprintf("nsq-test-%d", time.Now().UnixNano()))
+//	if err != nil {
+//		panic(err)
+//	}
+//	defer os.RemoveAll(tmpDir)
+//
+//	traces := newTraces(1, 10)
+//	msg, _ := traces.ToOtlpProtoBytes()
+//	ml := int64(len(msg))
+//
+//	dq := diskqueue.New(dqName, tmpDir, 100*(ml+4), int32(ml), 1<<16, 25000, 5*time.Second, func(lvl diskqueue.LogLevel, f string, args ...interface{}) {
+//		println(f, args)
+//	})
+//	defer dq.Close()
+//
+//	b.StartTimer()
+//
+//	for i := 0; i < b.N; i++ {
+//		err := dq.Put(msg)
+//		assert.NoError(b, err)
+//	}
+//
+//	for i := 0; i < b.N; i++ {
+//		<-dq.ReadChan()
+//	}
+//
+//	b.StopTimer()
+//}
 
 func newTraces(numTraces int, numSpans int) pdata.Traces {
 	traces := pdata.NewTraces()
@@ -55,62 +171,4 @@ func newTraces(numTraces int, numSpans int) pdata.Traces {
 	}
 
 	return traces
-}
-
-func BenchmarkWal_1Trace10Spans(b *testing.B) {
-	b.StopTimer()
-
-	wq, err := createWalQueue(newTraceRequestUnmarshallerFunc(nopTracePusher()))
-	assert.NoError(b, err)
-
-	traces := newTraces(1, 10)
-	req := newTracesRequest(context.Background(), traces, nopTracePusher())
-	b.StartTimer()
-
-	for i := 0; i < b.N; i++ {
-		err := wq.put(req)
-		assert.NoError(b, err)
-	}
-
-	for i := 0; i < b.N; i++ {
-		req, err := wq.get()
-		assert.NoError(b, err)
-		assert.NotNil(b, req)
-	}
-
-	b.StopTimer()
-	wq.close()
-}
-
-func BenchmarkDiskQueue_1Trace10Spans(b *testing.B) {
-	b.StopTimer()
-
-	dqName := "test_disk_queue_roll"
-	tmpDir, err := ioutil.TempDir("", fmt.Sprintf("nsq-test-%d", time.Now().UnixNano()))
-	if err != nil {
-		panic(err)
-	}
-	defer os.RemoveAll(tmpDir)
-
-	traces := newTraces(1, 10)
-	msg, _ := traces.ToOtlpProtoBytes()
-	ml := int64(len(msg))
-
-	dq := diskqueue.New(dqName, tmpDir, 100*(ml+4), int32(ml), 1<<16, 25000, 5*time.Second, func(lvl diskqueue.LogLevel, f string, args ...interface{}) {
-		println(f, args)
-	})
-	defer dq.Close()
-
-	b.StartTimer()
-
-	for i := 0; i < b.N; i++ {
-		err := dq.Put(msg)
-		assert.NoError(b, err)
-	}
-
-	for i := 0; i < b.N; i++ {
-		<-dq.ReadChan()
-	}
-
-	b.StopTimer()
 }

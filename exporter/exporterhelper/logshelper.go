@@ -43,7 +43,7 @@ func newLogsRequest(ctx context.Context, ld pdata.Logs, pusher consumerhelper.Co
 	}
 }
 
-func newLogsRequestUnmarshallerFunc(pusher consumerhelper.ConsumeLogsFunc) requestUnmarshaller {
+func newLogsRequestUnmarshalerFunc(pusher consumerhelper.ConsumeLogsFunc) requestUnmarshaler {
 	return func(bytes []byte) (request, error) {
 		logs, err := pdata.LogsFromOtlpProtoBytes(bytes)
 		if err != nil {
@@ -108,7 +108,7 @@ func NewLogsExporter(
 		return nil, errNilPushLogsData
 	}
 
-	be := newBaseExporter(cfg, logger, newLogsRequestUnmarshallerFunc(pusher), options...)
+	be := newBaseExporter(cfg, logger, newLogsRequestUnmarshalerFunc(pusher), options...)
 	be.wrapConsumerSender(func(nextSender requestSender) requestSender {
 		return &logsExporterWithObservability{
 			obsrep: obsreport.NewExporter(obsreport.ExporterSettings{

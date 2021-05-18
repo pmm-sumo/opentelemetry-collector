@@ -21,8 +21,40 @@ The following configuration options can be modified:
   User should calculate this as `num_seconds * requests_per_second` where:
     - `num_seconds` is the number of seconds to buffer in case of a backend outage
     - `requests_per_second` is the average number of requests per seconds.
+  - `wal_directory` (default = empty): When set, enables Write-Ahead-Log and specifies the directory where the log is stored
 - `resource_to_telemetry_conversion`
   - `enabled` (default = false): If `enabled` is `true`, all the resource attributes will be converted to metric labels by default.
 - `timeout` (default = 5s): Time to wait per individual attempt to send data to a backend.
 
 The full list of settings exposed for this helper exporter are documented [here](factory.go).
+
+
+## WAL
+
+```
+                                                   ┌─Consumer #1─┐
+                           Truncation              │    ┌───┐    │
+                         ┌─────┬─────┐        ┌───►│    │ 1 │    ├───► Success
+                         │     │     │        │    │    └───┘    │
+                         │     │     │        │    │             │
+                         │     │     │        │    └─────────────┘
+                         │     │     │        │
+ ┌─────────WAL-backed queue────┴─────┴───┐    │    ┌─Consumer #2─┐
+ │                                       │    │    │    ┌───┐    │
+ │     ┌───┐     ┌───┐ ┌───┐ ┌───┐ ┌───┐ │    │    │    │ 2 │    ├───► Permanent
+ │ n+1 │ n │ ... │ 4 │ │ 3 │ │ 2 │ │ 1 │ ├────┼───►│    └───┘    │      failure
+ │     └───┘     └───┘ └───┘ └───┘ └───┘ │    │    │             │
+ │                                       │    │    └─────────────┘
+ └───────────────────────────────────────┘    │
+    ▲              ▲                          │    ┌─Consumer #3─┐
+    │              │                          │    │    ┌───┐    │     Temporary
+    │              │                          └───►│    │ 3 │    ├───►  failure
+  write          read                              │    └───┘    │
+  index          index                             │             │         │
+    ▲                                              └─────────────┘         │
+    │                                                     ▲                │
+    │                                                     └── Retry ───────┤
+    │                                                                      │
+    │                                                                      │
+    └───────────────────────── Requeuing ◄────────── Retry limit exceeded ─┘
+```

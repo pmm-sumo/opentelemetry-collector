@@ -44,7 +44,7 @@ func newTracesRequest(ctx context.Context, td pdata.Traces, pusher consumerhelpe
 	}
 }
 
-func newTraceRequestUnmarshallerFunc(pusher consumerhelper.ConsumeTracesFunc) requestUnmarshaller {
+func newTraceRequestUnmarshalerFunc(pusher consumerhelper.ConsumeTracesFunc) requestUnmarshaler {
 	return func(bytes []byte) (request, error) {
 		traces, err := pdata.TracesFromOtlpProtoBytes(bytes)
 		if err != nil {
@@ -115,7 +115,7 @@ func NewTracesExporter(
 		return nil, errNilPushTraceData
 	}
 
-	be := newBaseExporter(cfg, logger, newTraceRequestUnmarshallerFunc(pusher), options...)
+	be := newBaseExporter(cfg, logger, newTraceRequestUnmarshalerFunc(pusher), options...)
 	be.wrapConsumerSender(func(nextSender requestSender) requestSender {
 		return &tracesExporterWithObservability{
 			obsrep: obsreport.NewExporter(

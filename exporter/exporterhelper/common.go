@@ -53,7 +53,7 @@ type request interface {
 	marshall() ([]byte, error)
 }
 
-type requestUnmarshaller func([]byte) (request, error)
+type requestUnmarshaler func([]byte) (request, error)
 
 // requestSender is an abstraction of a sender for a request independent of the type of the data (traces, metrics, logs).
 type requestSender interface {
@@ -161,7 +161,7 @@ type baseExporter struct {
 	convertResourceToTelemetry bool
 }
 
-func newBaseExporter(cfg config.Exporter, logger *zap.Logger, reqUnnmarshaller requestUnmarshaller, options ...Option) *baseExporter {
+func newBaseExporter(cfg config.Exporter, logger *zap.Logger, reqUnnmarshaller requestUnmarshaler, options ...Option) *baseExporter {
 	bs := fromOptions(options)
 	be := &baseExporter{
 		Component:                  componenthelper.New(bs.componentOptions...),
