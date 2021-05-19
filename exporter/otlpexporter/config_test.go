@@ -68,6 +68,7 @@ func TestLoadConfig(t *testing.T) {
 				Enabled:      true,
 				NumConsumers: 2,
 				QueueSize:    10,
+				WalEnabled:   false,
 			},
 			GRPCClientSettings: configgrpc.GRPCClientSettings{
 				Headers: map[string]string{

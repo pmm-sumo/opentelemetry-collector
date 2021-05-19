@@ -64,6 +64,7 @@ func TestLoadConfig(t *testing.T) {
 			Enabled:      true,
 			NumConsumers: 2,
 			QueueSize:    10,
+			WalEnabled:   false,
 		},
 		HTTPClientSettings: confighttp.HTTPClientSettings{
 			Endpoint:        "https://somedest:1234/api/v2/spans",
