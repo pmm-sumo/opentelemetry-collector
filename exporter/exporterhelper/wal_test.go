@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -139,10 +140,10 @@ func TestWal_ConsumersProducers(t *testing.T) {
 			defer ext.Shutdown(context.Background())
 			defer os.RemoveAll(path)
 
-			numMessagesConsumed := 0
+			numMessagesConsumed := int32(0)
 			wq.StartConsumers(c.numConsumers, func(item interface{}) {
 				if item != nil {
-					numMessagesConsumed++
+					atomic.AddInt32(&numMessagesConsumed, 1)
 				}
 			})
 
@@ -151,7 +152,7 @@ func TestWal_ConsumersProducers(t *testing.T) {
 			}
 
 			require.Eventually(t, func() bool {
-				return c.numMessagesProduced == numMessagesConsumed
+				return c.numMessagesProduced == int(atomic.LoadInt32(&numMessagesConsumed))
 			}, 1*time.Second, 10*time.Millisecond)
 		})
 	}
