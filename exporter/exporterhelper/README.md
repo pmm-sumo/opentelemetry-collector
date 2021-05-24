@@ -37,15 +37,15 @@ that in case of a sudden shutdown, they might be lost.
 
 ```
                                                    ┌─Consumer #1─┐
-                           Truncation              │    ┌───┐    │
-                         ┌──on sync──┐        ┌───►│    │ 1 │    ├───► Success
-                         │     │     │        │    │    └───┘    │
-                         │     │     │        │    │             │
-                         │     │     │        │    └─────────────┘
-                         │     │     │        │
- ┌─────────WAL-backed queue────┴─────┴───┐    │    ┌─Consumer #2─┐
- │                                       │    │    │    ┌───┐    │
- │     ┌───┐     ┌───┐ ┌───┐ ┌───┐ ┌───┐ │    │    │    │ 2 │    ├───► Permanent
+                                                   │    ┌───┐    │
+                         ┌──Deleted──┐        ┌───►│    │ 1 │    ├───► Success
+                         X     x     x        │    │    └───┘    │
+                         x     x     x        │    │             │
+                         x     x     x        │    └─────────────┘
+                         x     x     x        │
+ ┌─────────WAL-backed queue────x─────x───┐    │    ┌─Consumer #2─┐
+ │                       x     x     x   │    │    │    ┌───┐    │
+ │     ┌───┐     ┌───┐ ┌─x─┐ ┌─x─┐ ┌─x─┐ │    │    │    │ 2 │    ├───► Permanent
  │ n+1 │ n │ ... │ 4 │ │ 3 │ │ 2 │ │ 1 │ ├────┼───►│    └───┘    │      failure
  │     └───┘     └───┘ └───┘ └───┘ └───┘ │    │    │             │
  │                                       │    │    └─────────────┘

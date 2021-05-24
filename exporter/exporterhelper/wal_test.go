@@ -22,16 +22,14 @@ import (
 	"testing"
 	"time"
 
-	"go.opentelemetry.io/collector/component"
-	"go.opentelemetry.io/collector/config"
-	"go.opentelemetry.io/collector/extension/storage"
-	"go.opentelemetry.io/collector/extension/storage/storagetest"
-
 	"github.com/stretchr/testify/require"
-
 	"go.uber.org/zap"
 
+	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/config"
 	"go.opentelemetry.io/collector/consumer/pdata"
+	"go.opentelemetry.io/collector/extension/storage"
+	"go.opentelemetry.io/collector/extension/storage/storagetest"
 )
 
 func createStorageExtension(path string) storage.Extension {
@@ -46,11 +44,7 @@ func createTestQueue(extension storage.Extension) *WALQueue {
 		panic(err)
 	}
 
-	wq, err := newWALQueue(context.Background(), "foo", logger, client, newTraceRequestUnmarshalerFunc(nopTracePusher()))
-	if err != nil {
-		panic(err)
-	}
-	return wq
+	return newWALQueue(context.Background(), "foo", logger, client, newTraceRequestUnmarshalerFunc(nopTracePusher()))
 }
 
 func createTestWALStorage(extension storage.Extension) walStorage {

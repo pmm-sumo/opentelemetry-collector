@@ -23,11 +23,11 @@ import (
 	"sync"
 	"time"
 
-	"go.opentelemetry.io/collector/extension/storage"
-
 	"github.com/jaegertracing/jaeger/pkg/queue"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
+
+	"go.opentelemetry.io/collector/extension/storage"
 )
 
 // WALQueue holds the WAL-backed queue
@@ -80,24 +80,21 @@ type walContiguousStorage struct {
 const (
 	zapItemKey         = "itemKey"
 	zapWalIDKey        = "walID"
-	itemKeyTemplate    = "%s-item-%d"
-	readIndexTemplate  = "%s-read-index"
-	writeIndexTemplate = "%s-write-index"
+	itemKeyTemplate    = "%s-it-%d"
+	readIndexTemplate  = "%s-ri"
+	writeIndexTemplate = "%s-wi"
 )
 
 var (
 	errNotFound = errors.New("not found")
 )
 
-func newWALQueue(ctx context.Context, id string, logger *zap.Logger, client storage.Client, unmarshaler requestUnmarshaler) (*WALQueue, error) {
-	// FIXME: we need to uniquely identify pipelines (not only signal types but also specific pipeline instance)
-	wq := &WALQueue{
+func newWALQueue(ctx context.Context, id string, logger *zap.Logger, client storage.Client, unmarshaler requestUnmarshaler) *WALQueue {
+	return &WALQueue{
 		logger:  logger,
 		stopped: atomic.NewUint32(0),
 		storage: newWALContiguousStorage(ctx, id, logger, client, unmarshaler),
 	}
-
-	return wq, nil
 }
 
 // StartConsumers starts the given number of consumers which will be consuming items

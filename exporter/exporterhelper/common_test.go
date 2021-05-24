@@ -18,9 +18,6 @@ import (
 	"errors"
 	"testing"
 
-	"go.opentelemetry.io/collector/consumer/consumerhelper"
-	"go.opentelemetry.io/collector/consumer/pdata"
-
 	"github.com/stretchr/testify/require"
 	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
@@ -29,6 +26,8 @@ import (
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/component/componenttest"
 	"go.opentelemetry.io/collector/config"
+	"go.opentelemetry.io/collector/consumer/consumerhelper"
+	"go.opentelemetry.io/collector/consumer/pdata"
 )
 
 var (

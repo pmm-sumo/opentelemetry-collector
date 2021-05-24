@@ -20,10 +20,6 @@ import (
 	"fmt"
 	"time"
 
-	"go.opentelemetry.io/collector/component"
-	"go.opentelemetry.io/collector/config"
-	"go.opentelemetry.io/collector/extension/storage"
-
 	"github.com/cenkalti/backoff/v4"
 	jaegerqueue "github.com/jaegertracing/jaeger/pkg/queue"
 	"go.opencensus.io/metric"
@@ -33,7 +29,10 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
+	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/config"
 	"go.opentelemetry.io/collector/consumer/consumererror"
+	"go.opentelemetry.io/collector/extension/storage"
 	"go.opentelemetry.io/collector/obsreport"
 )
 
@@ -180,7 +179,7 @@ func getStorageClient(ctx context.Context, host component.Host, id config.Compon
 		return nil, errNoStorageClient
 	}
 
-	client, err := storageExtension.GetClient(ctx, component.KindReceiver, id)
+	client, err := storageExtension.GetClient(ctx, component.KindExporter, id)
 	if err != nil {
 		return nil, err
 	}
@@ -228,10 +227,7 @@ func (qrs *queuedRetrySender) initializeQueue(ctx context.Context, host componen
 			return err
 		}
 
-		qrs.queue, err = newWALQueue(ctx, qrs.fullName(), qrs.logger, *storageClient, qrs.requestUnmarshaler)
-		if err != nil {
-			return err
-		}
+		qrs.queue = newWALQueue(ctx, "", qrs.logger, *storageClient, qrs.requestUnmarshaler)
 		// TODO: this can be further exposed as a config param rather than relying on a type of queue
 		qrs.requeuingEnabled = true
 	} else {
@@ -242,7 +238,6 @@ func (qrs *queuedRetrySender) initializeQueue(ctx context.Context, host componen
 }
 
 func (qrs *queuedRetrySender) fullName() string {
-	// FIXME: we must identify the the sender using unique pipeline ID eventually
 	return qrs.id.String()
 }
 
