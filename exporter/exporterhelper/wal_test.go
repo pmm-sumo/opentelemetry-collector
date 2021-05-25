@@ -137,8 +137,8 @@ func TestWal_ConsumersProducers(t *testing.T) {
 
 			ext := createStorageExtension(path)
 			wq := createTestQueue(ext)
-			defer ext.Shutdown(context.Background())
 			defer os.RemoveAll(path)
+			defer ext.Shutdown(context.Background())
 
 			numMessagesConsumed := int32(0)
 			wq.StartConsumers(c.numConsumers, func(item interface{}) {

@@ -14,10 +14,18 @@
 
 package exporterhelper
 
-// This is largely based on queue.BoundedQueue and matches the subset used in the collector
+// consumersQueue is largely based on queue.BoundedQueue and matches the subset used in the collector
+// It describes a producer-consumer exchange which can be backed by e.g. the memory-based ring buffer queue
+// (queue.BoundedQueue) or via disk-based WAL (WALQueue)
 type consumersQueue interface {
+	// StartConsumers starts a given number of goroutines consuming items from the queue
+	// and passing them into the consumer callback.
 	StartConsumers(num int, callback func(item interface{}))
+	// Produce is used by the producer to submit new item to the queue. Returns false in case of queue overflow.
 	Produce(item interface{}) bool
+	// Stop stops all consumers, as well as the length reporter if started,
+	// and releases the items channel. It blocks until all consumers have stopped.
 	Stop()
+	// Size returns the current size of the queue
 	Size() int
 }

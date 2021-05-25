@@ -140,7 +140,7 @@ func (wq *WALQueue) Produce(item interface{}) bool {
 	return err == nil
 }
 
-// Stop stops accepting items and shuts-down the queue and closes the WAL
+// Stop stops accepting items, shuts down the queue and closes the WAL
 func (wq *WALQueue) Stop() {
 	wq.storage.stop()
 	wq.stopped.Store(1)
@@ -201,7 +201,7 @@ func initWALContiguousStorage(ctx context.Context, wcs *walContiguousStorage) {
 
 // put marshals the request and puts it into the WAL
 func (wcs *walContiguousStorage) put(ctx context.Context, req request) error {
-	buf, err := req.marshall()
+	buf, err := req.marshal()
 	if err != nil {
 		return err
 	}
@@ -242,11 +242,11 @@ func (wcs *walContiguousStorage) get(ctx context.Context) (request, error) {
 		// This is the only critical error
 		return nil, err
 	}
+	req, unmarshalErr := wcs.unmarshaler(buf)
 
-	// This needs to happen after unmarshalling as buf contents might change
-	defer wcs.updateItemRead(ctx, itemKey)
+	wcs.updateItemRead(ctx, itemKey)
 
-	return wcs.unmarshaler(buf)
+	return req, unmarshalErr
 }
 
 func (wcs *walContiguousStorage) size() int {
@@ -287,8 +287,8 @@ func (wcs *walContiguousStorage) buildWriteIndexKey() string {
 }
 
 func uint64ToBytes(val uint64) ([]byte, error) {
-	buf := new(bytes.Buffer)
-	err := binary.Write(buf, binary.LittleEndian, val)
+	var buf bytes.Buffer
+	err := binary.Write(&buf, binary.LittleEndian, val)
 	if err != nil {
 		return nil, err
 	}

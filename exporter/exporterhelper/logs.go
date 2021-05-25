@@ -68,7 +68,7 @@ func (req *logsRequest) export(ctx context.Context) error {
 	return req.pusher(ctx, req.ld)
 }
 
-func (req *logsRequest) marshall() ([]byte, error) {
+func (req *logsRequest) marshal() ([]byte, error) {
 	return req.ld.ToOtlpProtoBytes()
 }
 

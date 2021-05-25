@@ -52,7 +52,7 @@ type request interface {
 	onError(error) request
 	// Returns the count of spans/metric points or log records.
 	count() int
-	marshall() ([]byte, error)
+	marshal() ([]byte, error)
 }
 
 // requestUnmarshaler defines a function which can take a byte stream and unmarshal it into a relevant request

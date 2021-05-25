@@ -17,7 +17,7 @@ The following configuration options can be modified:
 - `sending_queue`
   - `enabled` (default = true)
   - `num_consumers` (default = 10): Number of consumers that dequeue batches; ignored if `enabled` is `false`
-  - `queue_size` (default = 5000): Maximum number of batches kept in memory before data; ignored if `enabled` is `false` or WAL is enabled;
+  - `queue_size` (default = 5000): Maximum number of batches kept in memory before dropping; ignored if `enabled` is `false` or WAL is enabled;
   User should calculate this as `num_seconds * requests_per_second` where:
     - `num_seconds` is the number of seconds to buffer in case of a backend outage
     - `requests_per_second` is the average number of requests per seconds.
@@ -31,9 +31,9 @@ The full list of settings exposed for this helper exporter are documented [here]
 
 ### WAL
 
-When `wal_enabled` is set, the queue is being buffered to by the storage extension. This has some limitations currently,
-the items that are currently being handled by a consumer are not backed by the persistent storage, which means
-that in case of a sudden shutdown, they might be lost.
+When `wal_enabled` is set, the queue is being buffered to disk by the storage extension. This has some limitations 
+currently. The items that have been passed to consumer for the actual exporting are removed from WAL. 
+In effect, in case of a sudden shutdown, they might be lost.
 
 ```
                                                    ┌─Consumer #1─┐
@@ -45,7 +45,7 @@ that in case of a sudden shutdown, they might be lost.
                          x     x     x        │
  ┌─────────WAL-backed queue────x─────x───┐    │    ┌─Consumer #2─┐
  │                       x     x     x   │    │    │    ┌───┐    │
- │     ┌───┐     ┌───┐ ┌─x─┐ ┌─x─┐ ┌─x─┐ │    │    │    │ 2 │    ├───► Permanent
+ │     ┌───┐     ┌───┐ ┌─x─┐ ┌─x─┐ ┌─x─┐ │    │    │    │ 2 │    ├───► Permanent -> X
  │ n+1 │ n │ ... │ 4 │ │ 3 │ │ 2 │ │ 1 │ ├────┼───►│    └───┘    │      failure
  │     └───┘     └───┘ └───┘ └───┘ └───┘ │    │    │             │
  │                                       │    │    └─────────────┘

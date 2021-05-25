@@ -370,7 +370,7 @@ func (mer *mockErrorRequest) onError(error) request {
 	return mer
 }
 
-func (mer *mockErrorRequest) marshall() ([]byte, error) {
+func (mer *mockErrorRequest) marshal() ([]byte, error) {
 	return nil, nil
 }
 
@@ -405,7 +405,7 @@ func (m *mockRequest) export(ctx context.Context) error {
 	return ctx.Err()
 }
 
-func (m *mockRequest) marshall() ([]byte, error) {
+func (m *mockRequest) marshal() ([]byte, error) {
 	return pdata.NewTraces().ToOtlpProtoBytes()
 }
 

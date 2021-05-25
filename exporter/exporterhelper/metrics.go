@@ -68,7 +68,7 @@ func (req *metricsRequest) export(ctx context.Context) error {
 	return req.pusher(ctx, req.md)
 }
 
-func (req *metricsRequest) marshall() ([]byte, error) {
+func (req *metricsRequest) marshal() ([]byte, error) {
 	return req.md.ToOtlpProtoBytes()
 }
 

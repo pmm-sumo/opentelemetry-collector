@@ -56,7 +56,7 @@ func newTraceRequestUnmarshalerFunc(pusher consumerhelper.ConsumeTracesFunc) req
 	}
 }
 
-func (req *tracesRequest) marshall() ([]byte, error) {
+func (req *tracesRequest) marshal() ([]byte, error) {
 	// Unfortunately, this is perhaps the only type of context which might be safely checked against
 	// TODO: handle serializing context
 	// c, ok := client.FromContext(req.context())
