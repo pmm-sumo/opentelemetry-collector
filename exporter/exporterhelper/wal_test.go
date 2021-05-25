@@ -45,7 +45,9 @@ func createTestQueue(extension storage.Extension) *WALQueue {
 		panic(err)
 	}
 
-	return newWALQueue(context.Background(), "foo", logger, client, newTraceRequestUnmarshalerFunc(nopTracePusher()))
+	wq := newWALQueue(context.Background(), "foo", logger, client, newTraceRequestUnmarshalerFunc(nopTracePusher()))
+	wq.retryDelay = 10 * time.Millisecond
+	return wq
 }
 
 func createTestWALStorage(extension storage.Extension) walStorage {
@@ -153,7 +155,7 @@ func TestWal_ConsumersProducers(t *testing.T) {
 
 			require.Eventually(t, func() bool {
 				return c.numMessagesProduced == int(atomic.LoadInt32(&numMessagesConsumed))
-			}, 1*time.Second, 10*time.Millisecond)
+			}, 200*time.Millisecond, 10*time.Millisecond)
 		})
 	}
 }
