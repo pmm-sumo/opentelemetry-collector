@@ -34,6 +34,7 @@ import (
 type WALQueue struct {
 	logger     *zap.Logger
 	numWorkers int
+	retryDelay time.Duration
 	stopWG     sync.WaitGroup
 	stopped    *atomic.Uint32
 	storage    walStorage
@@ -83,6 +84,7 @@ const (
 	itemKeyTemplate    = "%s-it-%d"
 	readIndexTemplate  = "%s-ri"
 	writeIndexTemplate = "%s-wi"
+	defaultRetryDelay  = 1 * time.Second
 )
 
 var (
@@ -91,9 +93,10 @@ var (
 
 func newWALQueue(ctx context.Context, id string, logger *zap.Logger, client storage.Client, unmarshaler requestUnmarshaler) *WALQueue {
 	return &WALQueue{
-		logger:  logger,
-		stopped: atomic.NewUint32(0),
-		storage: newWALContiguousStorage(ctx, id, logger, client, unmarshaler),
+		logger:     logger,
+		stopped:    atomic.NewUint32(0),
+		retryDelay: defaultRetryDelay,
+		storage:    newWALContiguousStorage(ctx, id, logger, client, unmarshaler),
 	}
 }
 
@@ -120,7 +123,7 @@ func (wq *WALQueue) StartConsumers(num int, callback func(item interface{})) {
 				}
 				req, err := wq.storage.get(context.Background())
 				if err == errNotFound || req == nil {
-					time.Sleep(1 * time.Second)
+					time.Sleep(wq.retryDelay)
 				} else {
 					consumer.Consume(req)
 				}
@@ -245,6 +248,10 @@ func (wcs *walContiguousStorage) get(ctx context.Context) (request, error) {
 	req, unmarshalErr := wcs.unmarshaler(buf)
 
 	wcs.updateItemRead(ctx, itemKey)
+
+	if req == nil {
+		return nil, errNotFound
+	}
 
 	return req, unmarshalErr
 }
