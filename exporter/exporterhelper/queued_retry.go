@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
-	"github.com/jaegertracing/jaeger/pkg/queue"
+	jaegerqueue "github.com/jaegertracing/jaeger/pkg/queue"
 	"go.opencensus.io/metric"
 	"go.opencensus.io/metric/metricdata"
 	"go.opencensus.io/metric/metricproducer"
@@ -29,7 +29,10 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
+	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/config"
 	"go.opentelemetry.io/collector/consumer/consumererror"
+	"go.opentelemetry.io/collector/extension/storage"
 	"go.opentelemetry.io/collector/internal/obsreportconfig/obsmetrics"
 )
 
@@ -42,7 +45,9 @@ var (
 		metric.WithLabelKeys(obsmetrics.ExporterKey),
 		metric.WithUnit(metricdata.UnitDimensionless))
 
-	errSendingQueueIsFull = errors.New("sending_queue is full")
+	errNoStorageClient        = errors.New("no storage client extension found")
+	errMultipleStorageClients = errors.New("multiple storage extensions found")
+	errSendingQueueIsFull     = errors.New("sending_queue is full")
 )
 
 func init() {
@@ -57,6 +62,8 @@ type QueueSettings struct {
 	NumConsumers int `mapstructure:"num_consumers"`
 	// QueueSize is the maximum number of batches allowed in queue at a given time.
 	QueueSize int `mapstructure:"queue_size"`
+	// PersistentEnabled describes whether persistency via storage file extension should be enabled
+	PersistentEnabled bool `mapstructure:"persistent_enabled"`
 }
 
 // DefaultQueueSettings returns the default settings for QueueSettings.
@@ -68,7 +75,8 @@ func DefaultQueueSettings() QueueSettings {
 		// This is a pretty decent value for production.
 		// User should calculate this from the perspective of how many seconds to buffer in case of a backend outage,
 		// multiply that by the number of requests per seconds.
-		QueueSize: 5000,
+		QueueSize:         5000,
+		PersistentEnabled: false,
 	}
 }
 
@@ -98,13 +106,16 @@ func DefaultRetrySettings() RetrySettings {
 }
 
 type queuedRetrySender struct {
-	fullName        string
-	cfg             QueueSettings
-	consumerSender  requestSender
-	queue           *queue.BoundedQueue
-	retryStopCh     chan struct{}
-	traceAttributes []trace.Attribute
-	logger          *zap.Logger
+	id                 config.ComponentID
+	signalName         string
+	cfg                QueueSettings
+	consumerSender     requestSender
+	queue              consumersQueue
+	retryStopCh        chan struct{}
+	traceAttributes    []trace.Attribute
+	logger             *zap.Logger
+	requeuingEnabled   bool
+	requestUnmarshaler requestUnmarshaler
 }
 
 func createSampledLogger(logger *zap.Logger) *zap.Logger {
@@ -126,29 +137,128 @@ func createSampledLogger(logger *zap.Logger) *zap.Logger {
 	return logger.WithOptions(opts)
 }
 
-func newQueuedRetrySender(fullName string, qCfg QueueSettings, rCfg RetrySettings, nextSender requestSender, logger *zap.Logger) *queuedRetrySender {
+func newQueuedRetrySender(id config.ComponentID, signalName string, qCfg QueueSettings, rCfg RetrySettings, reqUnmarshaler requestUnmarshaler, nextSender requestSender, logger *zap.Logger) *queuedRetrySender {
 	retryStopCh := make(chan struct{})
 	sampledLogger := createSampledLogger(logger)
-	traceAttr := trace.StringAttribute(obsmetrics.ExporterKey, fullName)
-	return &queuedRetrySender{
-		fullName: fullName,
-		cfg:      qCfg,
-		consumerSender: &retrySender{
-			traceAttribute: traceAttr,
-			cfg:            rCfg,
-			nextSender:     nextSender,
-			stopCh:         retryStopCh,
-			logger:         sampledLogger,
-		},
-		queue:           queue.NewBoundedQueue(qCfg.QueueSize, func(item interface{}) {}),
-		retryStopCh:     retryStopCh,
-		traceAttributes: []trace.Attribute{traceAttr},
-		logger:          sampledLogger,
+	traceAttr := trace.StringAttribute(obsmetrics.ExporterKey, id.String())
+
+	qrs := &queuedRetrySender{
+		id:                 id,
+		signalName:         signalName,
+		cfg:                qCfg,
+		retryStopCh:        retryStopCh,
+		traceAttributes:    []trace.Attribute{traceAttr},
+		logger:             sampledLogger,
+		requestUnmarshaler: reqUnmarshaler,
 	}
+
+	qrs.consumerSender = &retrySender{
+		traceAttribute: traceAttr,
+		cfg:            rCfg,
+		nextSender:     nextSender,
+		stopCh:         retryStopCh,
+		logger:         sampledLogger,
+		// Following three functions are provided in such way because they actually depend on queuedRetrySender
+		onSuccess:          qrs.onSuccess,
+		onTemporaryFailure: qrs.onTemporaryFailure,
+		onPermanentFailure: qrs.onPermanentFailure,
+	}
+
+	if !qCfg.PersistentEnabled {
+		qrs.queue = jaegerqueue.NewBoundedQueue(qrs.cfg.QueueSize, func(item interface{}) {})
+	}
+	// The Persistent Queue is initialized separately as it needs extra information about the component
+
+	return qrs
+}
+
+func (qrs *queuedRetrySender) onSuccess(req request, err error) error {
+	return nil
+}
+
+func (qrs *queuedRetrySender) onPermanentFailure(req request, err error) error {
+	return err
+}
+
+func (qrs *queuedRetrySender) onTemporaryFailure(req request, err error) error {
+	if qrs.requeuingEnabled && qrs.queue != nil {
+		if qrs.queue.Produce(req) {
+			qrs.logger.Error(
+				"Exporting failed. Putting back to the end of the queue.",
+				zap.Error(err),
+			)
+		} else {
+			qrs.logger.Error(
+				"Exporting failed. Queue did not accept requeuing request. Dropping data.",
+				zap.Error(err),
+				zap.Int("dropped_items", req.count()),
+			)
+		}
+		return err
+	}
+
+	qrs.logger.Error(
+		"Exporting failed. No more retries left. Dropping data.",
+		zap.Error(err),
+		zap.Int("dropped_items", req.count()),
+	)
+	return err
+}
+
+func getStorageClient(ctx context.Context, host component.Host, id config.ComponentID, signalName string) (*storage.Client, error) {
+	var storageExtension storage.Extension
+	for _, ext := range host.GetExtensions() {
+		if se, ok := ext.(storage.Extension); ok {
+			if storageExtension != nil {
+				return nil, errMultipleStorageClients
+			}
+			storageExtension = se
+		}
+	}
+
+	if storageExtension == nil {
+		return nil, errNoStorageClient
+	}
+
+	client, err := storageExtension.GetClient(ctx, component.KindExporter, id, signalName)
+	if err != nil {
+		return nil, err
+	}
+
+	return &client, err
+}
+
+// initializePersistentQueue uses extra information for initialization available from component.Host
+func (qrs *queuedRetrySender) initializePersistentQueue(ctx context.Context, host component.Host) error {
+	if qrs.cfg.PersistentEnabled {
+		storageClient, err := getStorageClient(ctx, host, qrs.id, qrs.signalName)
+		if err != nil {
+			return err
+		}
+
+		qrs.queue = newPersistentQueue(ctx, qrs.fullName(), qrs.cfg.QueueSize, qrs.logger, *storageClient, qrs.requestUnmarshaler)
+
+		// TODO: this can be further exposed as a config param rather than relying on a type of queue
+		qrs.requeuingEnabled = true
+	}
+
+	return nil
+}
+
+func (qrs *queuedRetrySender) fullName() string {
+	if qrs.signalName == "" {
+		return qrs.id.String()
+	}
+	return fmt.Sprintf("%s-%s", qrs.id.String(), qrs.signalName)
 }
 
 // start is invoked during service startup.
-func (qrs *queuedRetrySender) start() error {
+func (qrs *queuedRetrySender) start(ctx context.Context, host component.Host) error {
+	err := qrs.initializePersistentQueue(ctx, host)
+	if err != nil {
+		return err
+	}
+
 	qrs.queue.StartConsumers(qrs.cfg.NumConsumers, func(item interface{}) {
 		req := item.(request)
 		_ = qrs.consumerSender.send(req)
@@ -158,7 +268,7 @@ func (qrs *queuedRetrySender) start() error {
 	if qrs.cfg.Enabled {
 		err := queueSizeGauge.UpsertEntry(func() int64 {
 			return int64(qrs.queue.Size())
-		}, metricdata.NewLabelValue(qrs.fullName))
+		}, metricdata.NewLabelValue(qrs.fullName()))
 		if err != nil {
 			return fmt.Errorf("failed to create retry queue size metric: %v", err)
 		}
@@ -204,15 +314,17 @@ func (qrs *queuedRetrySender) shutdown() {
 	if qrs.cfg.Enabled {
 		_ = queueSizeGauge.UpsertEntry(func() int64 {
 			return int64(0)
-		}, metricdata.NewLabelValue(qrs.fullName))
+		}, metricdata.NewLabelValue(qrs.fullName()))
 	}
 
-	// First stop the retry goroutines, so that unblocks the queue workers.
+	// First Stop the retry goroutines, so that unblocks the queue numWorkers.
 	close(qrs.retryStopCh)
 
 	// Stop the queued sender, this will drain the queue and will call the retry (which is stopped) that will only
 	// try once every request.
-	qrs.queue.Stop()
+	if qrs.queue != nil {
+		qrs.queue.Stop()
+	}
 }
 
 // TODO: Clean this by forcing all exporters to return an internal error type that always include the information about retries.
@@ -229,12 +341,17 @@ func NewThrottleRetry(err error, delay time.Duration) error {
 	}
 }
 
+type onRequestHandlingFinishedFunc func(request, error) error
+
 type retrySender struct {
-	traceAttribute trace.Attribute
-	cfg            RetrySettings
-	nextSender     requestSender
-	stopCh         chan struct{}
-	logger         *zap.Logger
+	traceAttribute     trace.Attribute
+	cfg                RetrySettings
+	nextSender         requestSender
+	stopCh             chan struct{}
+	logger             *zap.Logger
+	onSuccess          onRequestHandlingFinishedFunc
+	onTemporaryFailure onRequestHandlingFinishedFunc
+	onPermanentFailure onRequestHandlingFinishedFunc
 }
 
 // send implements the requestSender interface
@@ -273,7 +390,7 @@ func (rs *retrySender) send(req request) error {
 
 		err := rs.nextSender.send(req)
 		if err == nil {
-			return nil
+			return rs.onSuccess(req, nil)
 		}
 
 		// Immediately drop data on permanent errors.
@@ -283,7 +400,7 @@ func (rs *retrySender) send(req request) error {
 				zap.Error(err),
 				zap.Int("dropped_items", req.count()),
 			)
-			return err
+			return rs.onPermanentFailure(req, err)
 		}
 
 		// Give the request a chance to extract signal data to retry if only some data
@@ -294,12 +411,7 @@ func (rs *retrySender) send(req request) error {
 		if backoffDelay == backoff.Stop {
 			// throw away the batch
 			err = fmt.Errorf("max elapsed time expired %w", err)
-			rs.logger.Error(
-				"Exporting failed. No more retries left. Dropping data.",
-				zap.Error(err),
-				zap.Int("dropped_items", req.count()),
-			)
-			return err
+			return rs.onTemporaryFailure(req, err)
 		}
 
 		if throttleErr, isThrottle := err.(*throttleRetry); isThrottle {
@@ -320,7 +432,7 @@ func (rs *retrySender) send(req request) error {
 		)
 		retryNum++
 
-		// back-off, but get interrupted when shutting down or request is cancelled or timed out.
+		// back-off, but Get interrupted when shutting down or request is cancelled or timed out.
 		select {
 		case <-req.context().Done():
 			return fmt.Errorf("request is cancelled or timed out %w", err)
