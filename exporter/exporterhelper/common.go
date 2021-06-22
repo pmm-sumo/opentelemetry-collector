@@ -54,7 +54,11 @@ type request interface {
 	onError(error) request
 	// Returns the count of spans/metric points or log records.
 	count() int
+	// marshal serializes the request so it can be persisted
 	marshal() ([]byte, error)
+	// onProcessingFinished provides capability to do the cleanup (e.g. remove item from persistent queue)
+	onProcessingFinished()
+	setOnProcessingFinished(callback func())
 }
 
 // requestUnmarshaler defines a function which takes a byte slice and unmarshal it into a relevant request
@@ -68,6 +72,7 @@ type requestSender interface {
 // baseRequest is a base implementation for the request.
 type baseRequest struct {
 	ctx context.Context
+	processingFinishedCallback func()
 }
 
 func (req *baseRequest) context() context.Context {
@@ -76,6 +81,16 @@ func (req *baseRequest) context() context.Context {
 
 func (req *baseRequest) setContext(ctx context.Context) {
 	req.ctx = ctx
+}
+
+func (req *baseRequest) setOnProcessingFinished(callback func()) {
+	req.processingFinishedCallback = callback
+}
+
+func (req *baseRequest) onProcessingFinished() {
+	if req.processingFinishedCallback != nil {
+		req.processingFinishedCallback()
+	}
 }
 
 // baseSettings represents all the options that users can configure.
