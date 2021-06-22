@@ -97,7 +97,7 @@ func NewLogsExporter(
 	}
 
 	bs := fromOptions(options...)
-	be := newBaseExporter(cfg, logger, bs, "logs", newLogsRequestUnmarshalerFunc(pusher))
+	be := newBaseExporter(cfg, logger, bs, signalLogs, newLogsRequestUnmarshalerFunc(pusher))
 	be.wrapConsumerSender(func(nextSender requestSender) requestSender {
 		return &logsExporterWithObservability{
 			obsrep:     be.obsrep,
