@@ -42,6 +42,20 @@ func newTracesRequest(ctx context.Context, td pdata.Traces, pusher consumerhelpe
 	}
 }
 
+func newTraceRequestUnmarshalerFunc(pusher consumerhelper.ConsumeTracesFunc) requestUnmarshaler {
+	return func(bytes []byte) (request, error) {
+		traces, err := pdata.TracesFromOtlpProtoBytes(bytes)
+		if err != nil {
+			return nil, err
+		}
+		return newTracesRequest(context.Background(), traces, pusher), nil
+	}
+}
+
+func (req *tracesRequest) marshal() ([]byte, error) {
+	return req.td.ToOtlpProtoBytes()
+}
+
 func (req *tracesRequest) onError(err error) request {
 	var traceError consumererror.Traces
 	if consumererror.AsTraces(err, &traceError) {
@@ -84,7 +98,7 @@ func NewTracesExporter(
 	}
 
 	bs := fromOptions(options...)
-	be := newBaseExporter(cfg, logger, bs)
+	be := newBaseExporter(cfg, logger, bs, signalTraces, newTraceRequestUnmarshalerFunc(pusher))
 	be.wrapConsumerSender(func(nextSender requestSender) requestSender {
 		return &tracesExporterWithObservability{
 			obsrep:     be.obsrep,
